@@ -1,0 +1,59 @@
+/* JobRequestPage.css */
+
+.job-request-card {
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  }
+  
+  .job-request-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+  }
+  
+  .job-description-preview {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  
+  .worker-card {
+    transition: all 0.2s ease;
+    cursor: pointer;
+  }
+  
+  .worker-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+  
+  .modal-backdrop {
+    background-color: rgba(0, 0, 0, 0.5);
+  }
+  
+  /* Status badges styling */
+  .badge.bg-warning {
+    background-color: #ffc107 !important;
+  }
+  
+  .badge.bg-success {
+    background-color: #28a745 !important;
+  }
+  
+  .badge.bg-info {
+    background-color: #17a2b8 !important;
+  }
+  
+  /* Card border color based on status */
+  .card.border-warning {
+    border-color: #ffc107 !important;
+  }
+  
+  .card.border-success {
+    border-color: #28a745 !important;
+  }
+  
+  .card.border-info {
+    border-color: #17a2b8 !important;
+  }

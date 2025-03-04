@@ -1,0 +1,95 @@
+/* Container */
+.search-container {
+  padding: 20px;
+}
+
+/* Search Form */
+.search-form {
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.search-input {
+  padding: 10px;
+  font-size: 1rem;
+  border-radius: 5px;
+  text-align: center;
+}
+
+.search-button {
+  padding: 10px 20px;
+  font-size: 1rem;
+  border-radius: 5px;
+  width:100px;
+}
+
+/* Workers Container */
+.workers-container {
+  margin-top: 20px;
+}
+
+/* Worker Card Styling */
+.worker-card {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  border-radius: 15px;
+  transition: transform 0.3s;
+}
+
+.worker-card:hover {
+  transform: translateY(-10px);
+}
+
+/* Worker Image */
+.worker-image {
+  height: 200px;
+  object-fit: cover;
+  border-top-left-radius: 15px;
+  border-top-right-radius: 15px;
+}
+
+/* Worker Details */
+.worker-name {
+  font-size: 1.5rem;
+  font-weight: bold;
+}
+
+.worker-details {
+  font-size: 1rem;
+}
+
+/* Profile Button */
+.profile-button {
+  margin-top: 10px;
+  width: 100%;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+  .search-form {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .search-button {
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .search-input {
+    font-size: 0.875rem;
+  }
+  
+  .search-button {
+    font-size: 0.875rem;
+  }
+  
+  .worker-name {
+    font-size: 1.25rem;
+  }
+  
+  .worker-details {
+    font-size: 0.875rem;
+  }
+}

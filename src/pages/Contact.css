@@ -1,0 +1,111 @@
+/* Contact Section */
+.contact_section {
+    padding: 50px 0;
+    background-color: #37474F; /* Dark Charcoal */
+    color: white;
+  }
+  
+  .contact_section .heading_container h2 {
+    text-align: center;
+    font-size: 32px;
+    font-weight: bold;
+    margin-bottom: 20px;
+    color: #FBC02D; /* Highlight */
+  }
+  
+  /* Contact Form & Map in One Line */
+  .contact_section .row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  
+  
+  /* Container styling */
+  .container {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 2rem;
+    margin-top: 70px;
+  }
+  
+  /* Header styling */
+  h2 {
+    font-size: 2rem;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 1.5rem;
+    text-align: center;
+  }
+  
+  /* Grid Layout styling */
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+  
+  /* Form styling */
+  form {
+    background-color: white;
+    border-radius: 8px;
+    padding: 2rem;
+  
+  }
+  
+  /* Input and textarea styling */
+  input, textarea {
+    width: 100%;
+    padding: 1rem;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 1rem;
+    color: #333;
+    transition: border-color 0.3s ease;
+  }
+  
+  input:focus, textarea:focus {
+    border-color: #4A90E2;
+    outline: none;
+  }
+  
+  /* Button styling */
+  button {
+    width: 100%;
+    padding: 1rem;
+    background-color:white;
+    color: black;
+    font-weight: bold;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+  
+  button:hover {
+    background-color: #357ABD;
+  }
+  
+  button:active {
+    background-color: #2C6F99;
+  }
+  
+  /* Google Map Container styling */
+  iframe {
+    width: 100%;
+    height: 100%;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  }
+  
+  /* Responsive styling */
+  @media (min-width: 768px) {
+    .grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  
+    form {
+      padding: 2.5rem;
+    }
+  }

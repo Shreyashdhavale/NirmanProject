@@ -1,0 +1,74 @@
+.event-section {
+  width: 100%;
+  background-color:  #FBC02D; /* Set entire background to blue */
+  padding-top: 50px ; /* Adds space above and below */
+  padding-bottom: 20px;
+}
+
+.event {
+  width: 80%; /* Ensures content is centered */
+  margin: 0 auto 100px auto; /* Centers and adds bottom margin */
+  display: flex;
+  background-color: white;
+  align-items: center;
+  justify-content: space-between;
+  background: white; /* White background for event content */
+  padding: 20px;
+  border-radius: 10px; /* Adds rounded corners */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Slight shadow for depth */
+}
+
+.event-reverse {
+  flex-direction: row-reverse;
+  
+}
+
+.event-description {
+  width: 48%;
+  padding: 20px;
+}
+
+.event-description h2 {
+  font-size: 24px;
+  margin-bottom: 10px;
+  color: #E64A19; /* Rust Orange */
+}
+
+.event-description p {
+  font-size: 16px;
+  line-height: 1.5;
+  color: #333; /* Darker text for better contrast */
+}
+
+.event-image {
+  width: 48%;
+}
+
+.event-image img {
+  width: 100%;
+  height: auto;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .event {
+      flex-direction: column;
+      width: 90%;
+      padding: 30px;
+  }
+
+  .event-reverse {
+      flex-direction: column;
+  }
+
+  .event-description, .event-image {
+      width: 100%;
+  }
+
+  .event-description {
+      padding: 10px;
+      text-align: center;
+  }
+}

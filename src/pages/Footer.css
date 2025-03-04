@@ -1,0 +1,37 @@
+/* Footer styling */
+.footer {
+  background-color: #37474F; /* Dark Charcoal */
+  color: white;
+    margin-top: 100px;
+  }
+  
+  .footer a {
+    text-decoration: none;
+    color: #ffffff;
+    transition: color 0.3s ease;
+  }
+  
+  .footer a:hover {
+    color: #FBC02D; /* Highlight */
+  }
+  
+  .footer i {
+    color: #ffffff;
+    transition: color 0.3s ease;
+  }
+  
+  .footer i:hover {
+    color: #f1f1f1; /* Change icon color on hover */
+  }
+  
+  /* Responsive Design */
+  @media (max-width: 767px) {
+    .footer .row {
+      text-align: center;
+    }
+  
+    .footer .col-md-4 {
+      margin-bottom: 20px;
+    }
+  }
+  
