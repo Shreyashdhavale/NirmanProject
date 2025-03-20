@@ -1,12 +1,13 @@
 /* Container */
 .search-container {
   padding: 20px;
+ 
 }
 
 /* Search Form */
 .search-form {
   width: 100%;
-  max-width: 600px;
+ 
   margin: 0 auto;
 }
 

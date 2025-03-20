@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { Navbar, Nav, Dropdown, Container } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
-import { Avatar } from "@mui/material"; // Import MUI Avatar
+import { Avatar } from "@mui/material";
 import './CustomNavbar.css';
 
 const CustomNavbar = ({ isAuthenticated, user, homeRoute, profileSliderOpen, setProfileSliderOpen, handleLogout }) => {
@@ -10,7 +10,6 @@ const CustomNavbar = ({ isAuthenticated, user, homeRoute, profileSliderOpen, set
 
   useEffect(() => {
     function handleClickOutside(event) {
-      // If click target is not within slider and not within the avatar button, close slider.
       if (
         sliderRef.current &&
         !sliderRef.current.contains(event.target) &&
@@ -30,34 +29,34 @@ const CustomNavbar = ({ isAuthenticated, user, homeRoute, profileSliderOpen, set
     <>
       <Navbar bg="light" expand="lg" className="custom-navbar shadow-sm">
         <Container fluid className="px-3">
-          {/* Logo */}
           <Navbar.Brand as={Link} to={homeRoute} className="logo py-2">
-            <img 
-              src="/Images/NirmanLogo.png" 
-              alt="Logo" 
-              height="60" 
+            <img
+              src="/Images/NirmanLogo.png"
+              alt="Logo"
+              height="60"
               className="d-inline-block align-top"
             />
           </Navbar.Brand>
 
-          {/* Mobile Toggler */}
-          <Navbar.Toggle 
-            aria-controls="responsive-navbar-nav" 
-            className="border-0 shadow-none"
-          />
+          <Navbar.Toggle aria-controls="responsive-navbar-nav" className="border-0 shadow-none" />
 
-          {/* Main Navigation */}
           <Navbar.Collapse id="responsive-navbar-nav" className="justify-content-center">
             <Nav className="mx-auto text-center">
               <Nav.Link as={Link} to={homeRoute} className="px-4">
                 Home
               </Nav.Link>
-              <Nav.Link as={Link} to="/contact" className="px-4">
-                Contact
-              </Nav.Link>
-              <Nav.Link as={Link} to="/about" className="px-4">
-                About Us
-              </Nav.Link>
+
+              {/* Show Contact and About Us only if user is NOT logged in as NGO or Provider */}
+              {(!isAuthenticated  ||(user?.type !== "ngo" && user?.type !== "provider")) && (
+                <>
+                  <Nav.Link as={Link} to="/contact" className="px-4">
+                    Contact
+                  </Nav.Link>
+                  <Nav.Link as={Link} to="/about" className="px-4">
+                    About Us
+                  </Nav.Link>
+                </>
+              )}
 
               {isAuthenticated && user?.type === "ngo" && (
                 <>
@@ -80,7 +79,6 @@ const CustomNavbar = ({ isAuthenticated, user, homeRoute, profileSliderOpen, set
               )}
             </Nav>
 
-            {/* Auth Section */}
             <Nav className="d-flex align-items-center justify-content-center">
               {!isAuthenticated ? (
                 <div className="d-flex gap-2 flex-column flex-lg-row align-items-center">

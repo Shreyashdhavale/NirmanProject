@@ -1,191 +1,215 @@
+/* Global Color Palette */
+:root {
+  --primary-color: #3B82F6;      /* Vibrant Blue */
+  --secondary-color: #10B981;    /* Emerald Green */
+  --accent-color: #6366F1;       /* Indigo */
+  --text-dark: #1F2937;          /* Dark Slate Gray */
+  --text-light: #F3F4F6;         /* Light Gray */
+  --background-soft: #F9FAFB;    /* Soft Background */
+}
+
 /* General Page Styling */
 .home {
-    width: 100%;
-    max-width: 1400px;
-    margin: 0 auto;
-    padding: 0 20px;
-    background-color: #f5f5f5; /* Light Grey Background */
-  }
-  
-  /* Hero Section */
-  .hero-container {
-    margin-top: 100px;
-    width: 100%;
-    background:   #E6E6FA (lavender); /* Blue-Green Gradient */
-    color: white;
-    padding: 50px 20px;
-    border-radius: 10px;
-  }
-  
-  .hero-content {
-    width: 100%;
-    padding: 0 20px;
-  }
-  
-  .hero-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 40px;
-    align-items: center;
-  }
-  
-  .hero-image {
-    width: 100%;
-  }
-  
-  .hero-img {
-    width: 100%;
-    max-width: 800px;
-    height: auto;
-    border-radius: 10px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-  }
-  
-  .hero-text {
-    text-align: center;
-  }
-  
-  .hero-title {
-    font-size: 2rem;
-    font-weight: 700;
-    margin-bottom: 1rem;
-  }
-  
-  .hero-description {
-    font-size: 1.2rem;
-    line-height: 1.6;
-    color: black;
-  }
-  
-  /* Services Section */
-  .services {
-    margin-top: 5rem;
-    padding: 0 20px;
-  }
-  
-  .services-title {
-    text-align: center;
-    margin-bottom: 2rem;
-    font-size: 1.8rem;
-    color: #0275d8;
-  }
-  
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 20px;
+  background-color: var(--background-soft);
+  font-family: 'Inter', sans-serif;
+}
+
+/* Hero Section - Modern Gradient Approach */
+.hero-container {
+  margin-top: 80px;
+  width: 100%;
+  background: lightblue;
+  padding: 60px 40px;
+  border-radius: 16px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  position: relative;
+  overflow: hidden;
+}
+
+.hero-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle at top right, rgba(255,255,255,0.2), transparent 50%);
+  z-index: 1;
+}
+
+.hero-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 40px;
+  align-items: center;
+  position: relative;
+  z-index: 2;
+}
+
+.hero-img {
+  width: 100%;
+  max-width: 800px;
+  height: auto;
+  border-radius: 12px;
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+  transition: transform 0.4s ease;
+}
+
+.hero-img:hover {
+  transform: scale(1.02);
+}
+
+.hero-text {
+  text-align: left;
+}
+
+.hero-title {
+  font-size: 2.5rem;
+  font-weight: 800;
+  margin-bottom: 1.5rem;
+  color: black;
+  line-height: 1.2;
+}
+
+.hero-description {
+  font-size: 1.1rem;
+  line-height: 1.7;
+  color: black;
+  font-weight: 300;
+}
+
+/* Services Section - Card Refinement */
+.services {
+  margin-top: 6rem;
+  padding: 0 20px;
+}
+
+.services-title {
+  text-align: center;
+  margin-bottom: 2.5rem;
+  font-size: 2.2rem;
+  color: var(--text-dark);
+  position: relative;
+}
+
+.services-title::after {
+  content: '';
+  position: absolute;
+  bottom: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 80px;
+  height: 4px;
+  background: var(--primary-color);
+}
+
+.service-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 30px;
+  padding: 20px 0;
+}
+
+.card {
+  background: white;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+  transition: all 0.4s ease;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.card:hover {
+  transform: translateY(-15px);
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+}
+
+.card-image {
+  width: 100%;
+  height: 250px;
+  object-fit: cover;
+  transition: transform 0.4s ease;
+}
+
+/* Event Section - Modern Layout */
+.event-section {
+  background: lightblue;
+  padding: 60px 0;
+  border-radius: 20px;
+  margin-top: 100px;
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+}
+
+.event {
+  width: 85%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: white;
+  padding: 60px;
+  border-radius: 16px;
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+  margin-bottom: 100px;
+  transition: transform 0.4s ease;
+}
+
+.event:hover {
+  transform: scale(1.02);
+}
+
+/* Contact & Footer Enhanced */
+.contact {
+  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+  padding: 60px 20px;
+  text-align: center;
+  color: white;
+  border-radius: 16px;
+}
+
+.footer {
+  background: var(--text-dark);
+  color: var(--text-light);
+  text-align: center;
+  padding: 30px;
+  border-top: 4px solid var(--primary-color);
+}
+
+/* Responsive Adjustments */
+@media (max-width: 1200px) {
   .service-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 20px;
-    padding: 20px 0;
+      grid-template-columns: repeat(2, 1fr);
   }
-  
-  .service-card {
-    width: 100%;
+}
+
+@media (max-width: 768px) {
+  .hero-grid {
+      grid-template-columns: 1fr;
   }
-  
-  .card {
-    background: white;
-    border-radius: 10px;
-    overflow: hidden;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    transition: transform 0.3s ease;
+
+  .service-grid {
+      grid-template-columns: 1fr;
   }
-  
-  .card:hover {
-    transform: scale(1.05);
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
-  }
-  
-  .card-image {
-    width: 100%;
-    height: 200px;
-    object-fit: cover;
-    transition: transform 0.3s ease;
-  }
-  
-  .card:hover .card-image {
-    transform: scale(1.1);
-  }
-  
-  /* Event Section */
-  .event-section {
-    width: 100vw;
-    background-color: #f04e30; /* Warm Red-Orange */
-    padding: 50px 0;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    border-radius: 15px;
-    margin-top: 90px;
-  }
-  
+
   .event {
-    width: 80%;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    background: white;
-    padding: 50px;
-    border-radius: 10px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    margin-bottom: 100px;
+      flex-direction: column;
+      text-align: center;
   }
-  
-  .event-reverse {
-    flex-direction: row-reverse;
-    
-  }
-  
-  /* Contact Section */
-  .contact {
-    background: #1db954; /* Green - Symbolizing Help & Growth */
-    padding: 50px 20px;
-    text-align: center;
-    color: white;
-  }
-  
-  .contact h2 {
-    font-size: 2rem;
-    margin-bottom: 10px;
-  }
-  
-  .contact p {
-    font-size: 1.2rem;
-  }
-  
-  /* Footer */
-  .footer {
-    background: #333;
-    color: white;
-    text-align: center;
-    padding: 20px;
-  }
-  
-  /* Responsive Design */
-  @media (max-width: 992px) {
-    .service-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-  
-    .hero-grid {
-        grid-template-columns: 1fr;
-        gap: 20px;
-    }
-  
-    .hero-text {
-        order: -1;
-    }
-  }
-  
-  @media (max-width: 576px) {
-    .service-grid {
-        grid-template-columns: 1fr;
-    }
-  
-    .hero-title {
-        font-size: 1.5rem;
-    }
-  
-    .hero-description {
-        font-size: 1rem;
-    }
-  }
-  
+}
+
+/* Scroll Bar Styling */
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--background-soft);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--primary-color);
+  border-radius: 5px;
+}

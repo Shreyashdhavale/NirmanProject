@@ -19,12 +19,12 @@ const WorkerSearch = () => {
   const fetchWorkers = async (name) => {
     try {
       const response = await axios.get(`http://localhost:8080/api/workers/search?name=${name}`);
-      // Ensure workers is always an array
       const workersData = Array.isArray(response.data) ? response.data : [];
+      console.log('Workers data:', workersData);
       setWorkers(workersData);
     } catch (error) {
       console.error("Error fetching workers:", error);
-      setWorkers([]); // Set to empty array on error
+      setWorkers([]); // Clear the list on error
     }
   };
 
@@ -34,6 +34,11 @@ const WorkerSearch = () => {
   };
 
   const handleViewProfile = (workerId) => {
+    if (!workerId) {
+      console.error('Worker ID is missing!');
+      return;
+    }
+    console.log('Selected worker ID:', workerId);
     setSelectedWorkerId(workerId);
     setShowModal(true);
   };
@@ -44,7 +49,7 @@ const WorkerSearch = () => {
   };
 
   const handleUpdateSuccess = () => {
-    fetchWorkers(searchTerm); // Refresh the workers list
+    fetchWorkers(searchTerm); // Refresh workers list after update
   };
 
   return (
@@ -71,7 +76,7 @@ const WorkerSearch = () => {
       <div className="workers-container">
         <Row>
           {workers.map((worker, index) => (
-            <Col md={4} sm={6} xs={12} key={worker.id || index} className="mb-4">
+            <Col md={4} sm={6} xs={12} key={worker.workerId || index} className="mb-4">
               <Card className="worker-card h-100">
                 {worker.profilePhoto && (
                   <Card.Img
@@ -91,7 +96,7 @@ const WorkerSearch = () => {
                   </Card.Text>
                   <Button
                     variant="info"
-                    onClick={() => handleViewProfile(worker.id)}
+                    onClick={() => handleViewProfile(worker.workerId)}  // Use workerId here
                     className="profile-button mt-auto"
                   >
                     View Entire Profile

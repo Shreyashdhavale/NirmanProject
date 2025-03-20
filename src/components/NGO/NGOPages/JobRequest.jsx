@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './JobRequest.css';
-
+import { Modal } from 'bootstrap';
 const JobRequest = () => {
   const [jobRequests, setJobRequests] = useState([]);
   const [filteredRequests, setFilteredRequests] = useState([]);
@@ -19,7 +19,10 @@ const JobRequest = () => {
   const [showConfirmationModal, setShowConfirmationModal] = useState(false);
   const [selectedWorker, setSelectedWorker] = useState(null);
   const [notification, setNotification] = useState(null);
-
+  const [selectedEmployer, setSelectedEmployer] = useState(null);
+  const [loadingEmployer, setLoadingEmployer] = useState(false);
+  const [employerError, setEmployerError] = useState(null);
+  
   // API base URL
   const API_BASE_URL = 'http://localhost:8080/api';
 
@@ -42,7 +45,23 @@ const JobRequest = () => {
 
     fetchJobRequests();
   }, []);
+//fetchEmployerDetails
 
+const fetchEmployerDetails = async (employerId) => {
+  try {
+    setLoadingEmployer(true);
+    setEmployerError(null);
+    
+    const response = await axios.get(`${API_BASE_URL}/employers/${employerId}`);
+    setSelectedEmployer(response.data);
+    
+    setLoadingEmployer(false);
+  } catch (error) {
+    console.error("Error fetching employer details:", error);
+    setEmployerError("Failed to load employer details.");
+    setLoadingEmployer(false);
+  }
+};
   // Fetch workers from API
   const fetchWorkers = async () => {
     try {
@@ -252,60 +271,85 @@ const JobRequest = () => {
     }
 
     return (
-      <div className="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
-        {filteredRequests.map((request) => (
-          <div className="col" key={request.jobRequestId}>
-            <div className={`card h-100 job-request-card ${request.status === 'assigned' ? 'border-success' : request.status === 'completed' ? 'border-info' : 'border-warning'}`}>
-              <div className="card-header d-flex justify-content-between align-items-center">
-                <h5 className="card-title mb-0">{request.jobTitle}</h5>
-                <span className={`badge ${request.status === 'assigned' ? 'bg-success' : request.status === 'completed' ? 'bg-info' : 'bg-warning'}`}>
-                  {request.status || 'Pending'}
-                </span>
+      <>
+        {/* Job Requests */}
+        <div className="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+          {filteredRequests.map((request) => (
+            <div className="col" key={request.jobRequestId}>
+              <div className={`card h-100 job-request-card ${request.status === 'assigned' ? 'border-success' : request.status === 'completed' ? 'border-info' : 'border-warning'}`}>
+                <div className="card-header d-flex justify-content-between align-items-center">
+                  <h5 className="card-title mb-0">{request.jobTitle}</h5>
+                  <span className={`badge ${request.status === 'assigned' ? 'bg-success' : request.status === 'completed' ? 'bg-info' : 'bg-warning'}`}>
+                    {request.status || 'Pending'}
+                  </span>
+                </div>
+                <div className="card-body">
+                  <div className="mb-3"><strong>Employer:</strong> {request.contactPerson}</div>
+                  <div className="mb-3"><strong>Location:</strong> {request.workLocation}</div>
+                  <div className="mb-3"><strong>Skills Required:</strong> {request.skillRequired}</div>
+                  <div className="mb-3"><strong>Workers Needed:</strong> {request.numOfWorkers}</div>
+                  <div className="mb-3"><strong>Duration:</strong> {formatDate(request.startDate)} to {formatDate(request.endDate)}</div>
+                  <div className="mb-3"><strong>Daily Wage:</strong> ₹{request.wagePerDay}</div>
+                  <p className="card-text job-description-preview">{request.jobDescription}</p>
+                </div>
+                <div className="card-footer d-flex justify-content-between">
+                  {/* View Employer Details Button */}
+                  <button 
+                    className="btn btn-outline-primary"
+                    onClick={() => fetchEmployerDetails(request.employerId)}
+                    data-bs-toggle="modal"
+                    data-bs-target="#employerDetailsModal"
+                  > 
+                    View Details
+                  </button>
+    
+                  <button 
+                    className="btn btn-primary"
+                    onClick={() => handleAssignClick(request)}
+                    disabled={request.status === 'completed'}
+                  >
+                    {request.status === 'assigned' ? 'Reassign' : 'Assign Workers'}
+                  </button>
+                </div>
               </div>
-              <div className="card-body">
-                <div className="mb-3">
-                  <strong>Employer:</strong> {request.contactPerson}
-                </div>
-                <div className="mb-3">
-                  <strong>Location:</strong> {request.workLocation}
-                </div>
-                <div className="mb-3">
-                  <strong>Skills Required:</strong> {request.skillRequired}
-                </div>
-                <div className="mb-3">
-                  <strong>Workers Needed:</strong> {request.numOfWorkers}
-                </div>
-                <div className="mb-3">
-                  <strong>Duration:</strong> {formatDate(request.startDate)} to {formatDate(request.endDate)}
-                </div>
-                <div className="mb-3">
-                  <strong>Daily Wage:</strong> ₹{request.wagePerDay}
-                </div>
-                <p className="card-text job-description-preview">{request.jobDescription}</p>
+            </div>
+          ))}
+        </div>
+    
+        {/* Employer Details Modal */}
+        <div className="modal fade" id="employerDetailsModal" tabIndex="-1" aria-labelledby="employerDetailsModalLabel" aria-hidden="true">
+          <div className="modal-dialog">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title" id="employerDetailsModalLabel">Employer Details</h5>
+                <button type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
               </div>
-              <div className="card-footer d-flex justify-content-between">
-                <button 
-                  className="btn btn-outline-primary"
-                  data-bs-toggle="modal"
-                  data-bs-target={`#detailsModal-${request.jobRequestId}`}
-                >
-                  View Details
-                </button>
-                <button 
-                  className="btn btn-primary"
-                  onClick={() => handleAssignClick(request)}
-                  disabled={request.status === 'completed'}
-                >
-                  {request.status === 'assigned' ? 'Reassign' : 'Assign Workers'}
-                </button>
+              <div className="modal-body">
+                {loadingEmployer ? (
+                  <p>Loading employer details...</p>
+                ) : employerError ? (
+                  <p className="text-danger">{employerError}</p>
+                ) : selectedEmployer ? (
+                  <div>
+                    <p><strong>Name:</strong> {selectedEmployer.name}</p>
+                    <p><strong>Email:</strong> {selectedEmployer.email}</p>
+                    <p><strong>Phone:</strong> {selectedEmployer.phone}</p>
+                    <p><strong>Company:</strong> {selectedEmployer.companyName}</p>
+                    <p><strong>Address:</strong> {selectedEmployer.address}</p>
+                  </div>
+                ) : (
+                  <p>No employer details available.</p>
+                )}
+              </div>
+              <div className="modal-footer">
+                <button type="button" className="btn btn-secondary" data-bs-dismiss="modal">Close</button>
               </div>
             </div>
           </div>
-        ))}
-      </div>
+        </div>
+      </>
     );
-  };
-
+  }    
   // Render list of workers in assign modal
   const renderWorkersList = () => {
     if (filteredWorkers.length === 0) {

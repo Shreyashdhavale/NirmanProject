@@ -37,7 +37,7 @@ const  SignupProvider= () => {
       console.log('Response:', response.data.message); // Debug the response
   
       if (response.data.success) {
-        navigate('/jobproviderhome', { replace: true });
+        navigate('/login/provider', { replace: true });
       } 
       // else {
         alert(response.data.message || 'Signup failed');

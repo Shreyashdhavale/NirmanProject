@@ -1,6 +1,6 @@
 .event-section {
   width: 100%;
-  background-color:  #FBC02D; /* Set entire background to blue */
+  background-color:  lightblue; /* Set entire background to blue */
   padding-top: 50px ; /* Adds space above and below */
   padding-bottom: 20px;
 }
@@ -31,7 +31,7 @@
 .event-description h2 {
   font-size: 24px;
   margin-bottom: 10px;
-  color: #E64A19; /* Rust Orange */
+  color: black; 
 }
 
 .event-description p {

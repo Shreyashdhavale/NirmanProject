@@ -41,6 +41,14 @@ const App = () => {
 const AppRoutes = ({ isAuthenticated, setIsAuthenticated, user, setUser, profileSliderOpen, setProfileSliderOpen }) => {
   const navigate = useNavigate();
 
+/*************  ✨ Codeium Command ⭐  *************/
+/**
+ * Handles user login by setting authentication state and navigating to the appropriate home page.
+ * @param {Object} userData - The user data containing information about the authenticated user.
+ * @param {string} userData.type - The type of user, either 'ngo' or 'provider'.
+ */
+
+/******  e47547ec-11e2-4369-ba5d-ea0fcd0bce37  *******/
   const handleLogin = (userData) => {
     setIsAuthenticated(true);
     setUser(userData);

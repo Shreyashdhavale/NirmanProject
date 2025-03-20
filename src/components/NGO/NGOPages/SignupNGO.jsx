@@ -1,71 +1,97 @@
-import React, { useState } from "react";
-import { Form, Button, Container } from "react-bootstrap";
-import { useNavigate } from "react-router-dom";
+import React, { useState } from 'react';
+import { Form, Button, Container } from 'react-bootstrap';
+import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 
-const SignupNGO = ({ setIsAuthenticated }) => {
+
+const  SignupProvider= () => {
+  const navigate = useNavigate(); 
+
   const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    password: "",
+    name: '',
+    email: '',
+    password: '',
   });
-  const navigate = useNavigate();
 
+  // Handle form input changes
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setFormData(prevState => ({
+      ...prevState,
+      [name]: value
+    }));
   };
 
-  const handleSubmit = (e) => {
+  // Handle form submission
+  const handleSignup = async (e) => {
     e.preventDefault();
-    setIsAuthenticated(true); // Update authentication state
-    navigate("/"); // Redirect to home after registration
+    try {
+      console.log(formData);
+      
+      const response = await axios.post(' http://localhost:8080/api/ngo/signup', formData, {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+  
+      console.log('Response:', response.data.message); // Debug the response
+  
+      if (response.data.success) {
+        navigate('/login/ngo', { replace: true });
+      } 
+      // else {
+        alert(response.data.message || 'Signup failed');
+      // }
+    } catch (error) {
+      console.error('Error:', error.response ? error.response.data : error.message);
+      alert(error.response?.data?.message || 'An error occurred during signup');
+    }
   };
 
   return (
-    <Container className="auth-container">
-      <h2 className="text-center">NGO Registration</h2>
-      <Form onSubmit={handleSubmit}>
-        <Form.Group controlId="name">
-          <Form.Label>NGO Name</Form.Label>
+    <Container className="mt-5">
+      <h2>NGO Signup</h2>
+      <Form onSubmit={handleSignup}>
+        <Form.Group controlId="formName">
+          <Form.Label>Name</Form.Label>
           <Form.Control
             type="text"
-            placeholder="Enter NGO Name"
             name="name"
             value={formData.name}
             onChange={handleChange}
             required
+            placeholder="Enter your name"
           />
         </Form.Group>
-
-        <Form.Group controlId="email">
+        <Form.Group controlId="formEmail">
           <Form.Label>Email</Form.Label>
           <Form.Control
             type="email"
-            placeholder="Enter email"
             name="email"
             value={formData.email}
             onChange={handleChange}
             required
+            placeholder="Enter your email"
           />
         </Form.Group>
-
-        <Form.Group controlId="password">
+        <Form.Group controlId="formPassword">
           <Form.Label>Password</Form.Label>
           <Form.Control
             type="password"
-            placeholder="Enter password"
             name="password"
             value={formData.password}
             onChange={handleChange}
             required
+            placeholder="Enter your password"
           />
         </Form.Group>
-
-        <Button variant="success" type="submit" className="w-100 mt-3">
-          Register
+        
+        <Button variant="success" type="submit" className="mt-3">
+          Signup
         </Button>
       </Form>
     </Container>
   );
 };
 
-export default SignupNGO;
+export default SignupProvider;
