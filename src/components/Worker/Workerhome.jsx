@@ -1,485 +1,651 @@
+// src/pages/WorkerProfile.jsx
 import React, { useState, useEffect } from "react";
-import { Button, Row, Col, Image, Card, Form, Spinner, Alert } from 'react-bootstrap';
+import { useLocation } from "react-router-dom";
+import { Container, Row, Col, Form, Button, InputGroup, Spinner, Image } from "react-bootstrap";
+import { ToastContainer, toast } from "react-toastify";
+import axios from "axios";
+import "react-toastify/dist/ReactToastify.css";
+import "./WorkerProfile.css";
 
-const WorkerHome = ({ workerData: initialWorkerData, handleLogout, handleSaveProfile }) => {
-    // State management
-    const [isEditMode, setIsEditMode] = useState(false);
-    const [formData, setFormData] = useState(initialWorkerData || {});
-    const [fileUploads, setFileUploads] = useState({
+const WorkerProfile = ({ onLogin }) => {
+    const location = useLocation();
+    const { workerId } = location.state || {};
+    
+    const [loading, setLoading] = useState(true);
+    const [editMode, setEditMode] = useState(false);
+    const [workerData, setWorkerData] = useState(null);
+    const [updatedData, setUpdatedData] = useState({});
+    const [newImages, setNewImages] = useState({
         profilePhoto: null,
         aadhaarPhoto: null,
         alternateDoc: null
     });
-    const [previewImages, setPreviewImages] = useState({
-        profilePhoto: null,
-        aadhaarPhoto: null,
-        alternateDoc: null
-    });
-    const [isSaving, setIsSaving] = useState(false);
-    const [error, setError] = useState(null);
-    const [success, setSuccess] = useState(null);
 
-    // Initialize form data when props change
+    // Fetch worker data on component mount
     useEffect(() => {
-        setFormData(initialWorkerData || {});
-    }, [initialWorkerData]);
+        const fetchWorkerData = async () => {
+            try {
+                setLoading(true);
+                const response = await axios.get(`http://localhost:8080/api/workers/${workerId}`);
+                const workerData = response.data;
+                setWorkerData(workerData);
+                setUpdatedData(workerData);
+                setLoading(false);
+            } catch (err) {
+                toast.error("Failed to fetch worker data. Please try again later.");
+                setLoading(false);
+                console.error("Error fetching worker data:", err);
+            }
+        };
 
-    const toggleEditMode = () => {
-        if (isEditMode) {
-            // Reset to original data when cancelling
-            setFormData(initialWorkerData);
-            clearImagePreviews();
-            setError(null);
-            setSuccess(null);
-        }
-        setIsEditMode(!isEditMode);
-    };
-
-    const clearImagePreviews = () => {
-        // Revoke object URLs to prevent memory leaks
-        Object.values(previewImages).forEach(url => {
-            if (url) URL.revokeObjectURL(url);
-        });
-        setPreviewImages({
-            profilePhoto: null,
-            aadhaarPhoto: null,
-            alternateDoc: null
-        });
-        setFileUploads({
-            profilePhoto: null,
-            aadhaarPhoto: null,
-            alternateDoc: null
-        });
-    };
+        fetchWorkerData();
+    }, [workerId]);
 
     const handleInputChange = (e) => {
         const { name, value, type, checked } = e.target;
-        setFormData(prev => ({
+        setUpdatedData(prev => ({
             ...prev,
             [name]: type === 'checkbox' ? checked : value
         }));
     };
 
-    const handleFileChange = (e) => {
-        const { name, files } = e.target;
-        setError(null);
-        
-        if (files && files[0]) {
-            const file = files[0];
-            const validImageTypes = ['image/jpeg', 'image/png', 'image/gif'];
-            
-            // Validate file type
-            if (!validImageTypes.includes(file.type)) {
-                setError(`Invalid file type for ${name}. Please upload JPEG, PNG, or GIF.`);
-                return;
-            }
-            
-            // Validate file size (5MB limit)
-            if (file.size > 5 * 1024 * 1024) {
-                setError(`File too large for ${name}. Maximum size is 5MB.`);
-                return;
-            }
-
-            // Revoke previous preview URL if exists
-            if (previewImages[name]) {
-                URL.revokeObjectURL(previewImages[name]);
-            }
-
-            // Store the file and create preview
-            setFileUploads(prev => ({
-                ...prev,
-                [name]: file
-            }));
-            
-            const previewUrl = URL.createObjectURL(file);
-            setPreviewImages(prev => ({
-                ...prev,
-                [name]: previewUrl
-            }));
+    const handleImageChange = (e, type) => {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setNewImages(prev => ({
+                    ...prev,
+                    [type]: reader.result
+                }));
+                setUpdatedData(prev => ({
+                    ...prev,
+                    [type]: reader.result
+                }));
+            };
+            reader.readAsDataURL(file);
         }
     };
 
-    const validateForm = () => {
-        // Required fields validation
-        if (!formData.fullName?.trim()) {
-            setError("Full Name is required");
-            return false;
-        }
-        
-        if (!formData.contact?.trim()) {
-            setError("Contact number is required");
-            return false;
-        }
-        
-        // Validate contact number format
-        const contactRegex = /^[0-9]{10,15}$/;
-        if (!contactRegex.test(formData.contact)) {
-            setError("Please enter a valid contact number (10-15 digits)");
-            return false;
-        }
-        
-        if (formData.email && !/^\S+@\S+\.\S+$/.test(formData.email)) {
-            setError("Please enter a valid email address");
-            return false;
-        }
-        
-        return true;
-    };
-
-    const handleSave = async () => {
-        if (!validateForm()) return;
-    
-        setIsSaving(true);
-        setError(null);
-        setSuccess(null);
-        setDebugInfo(null);
-    
+    const handleSubmit = async () => {
         try {
-            // Always use FormData to handle both regular fields and files consistently
-            const submitData = new FormData();
-    
-            // Add all form data fields to FormData
-            Object.keys(formData).forEach(key => {
-                // Skip fields that are handled as files
-                if (!['profilePhoto', 'aadhaarPhoto', 'alternateDoc'].includes(key)) {
-                    const value = formData[key];
-                    if (value !== null && value !== undefined) {
-                        // Convert all values to strings for FormData
-                        submitData.append(key, value.toString());
+            const formData = new FormData();
+            Object.keys(updatedData).forEach(key => {
+                formData.append(key, updatedData[key]);
+            });
+            
+            const response = await axios.put(
+                `http://localhost:8080/api/workers/${workerId}`,
+                formData,
+                {
+                    headers: {
+                        'Content-Type': 'multipart/form-data'
                     }
                 }
-            });
-    
-            // Add files to FormData if they exist
-            Object.entries(fileUploads).forEach(([key, file]) => {
-                if (file) {
-                    submitData.append(key, file, file.name || `${key}.jpg`);
-                } else if (formData[key]) {
-                    // If no new file but existing file reference, keep the existing
-                    submitData.append(key, formData[key]);
-                }
-            });
-    
-            // Debug information
-            const debugData = {
-                formKeys: Array.from(submitData.keys()),
-                fileUploads: Object.keys(fileUploads).filter(k => fileUploads[k] !== null)
-                    .map(k => ({
-                        field: k,
-                        type: fileUploads[k]?.type || 'unknown',
-                        size: fileUploads[k]?.size || 0,
-                        name: fileUploads[k]?.name || 'unnamed'
-                    })),
-                timestamp: new Date().toISOString()
-            };
-            
-            console.debug("Submitting data:", debugData);
-            
-            const response = await handleSaveProfile(submitData);
-            
-            if (!response) {
-                throw new Error("No response received from server");
-            }
-            
-            // Handle different response formats
-            if (response.error) {
-                throw new Error(response.error);
-            }
-            
-            if (response.message && response.status >= 400) {
-                throw new Error(response.message);
-            }
-            
-            clearImagePreviews();
-            setIsEditMode(false);
-            setSuccess(response.message || "Profile saved successfully!");
-            
-        } catch (err) {
-            console.error("Save failed:", err);
-            setError(err.message || "Failed to save profile. Please try again.");
-        } finally {
-            setIsSaving(false);
-        }
-    };
-
-    const SafeImage = ({ src, alt, imageType }) => {
-        const displaySrc = previewImages[imageType] || src;
-        
-        if (!displaySrc) {
-            return (
-                <div className="d-flex align-items-center justify-content-center bg-light" 
-                     style={{ width: '150px', height: '150px' }}>
-                    <span className="text-muted">No image</span>
-                </div>
             );
-        }
 
-        let imageSrc = displaySrc;
-        if (!displaySrc.startsWith('blob:') && !displaySrc.startsWith('data:image')) {
-            if (displaySrc.startsWith("/")) {
-                imageSrc = `http://localhost:8080${displaySrc}`;
-            } else if (typeof displaySrc === "string" && displaySrc.length > 100) {
-                imageSrc = `data:image/png;base64,${displaySrc}`;
-            }
+            toast.success("Profile updated successfully!");
+            setWorkerData(response.data);
+            setUpdatedData(response.data);
+            setNewImages({
+                profilePhoto: null,
+                aadhaarPhoto: null,
+                alternateDoc: null
+            });
+            setEditMode(false);
+        } catch (err) {
+            toast.error("Failed to update profile. Please try again.");
+            console.error("Error updating worker:", err);
         }
+    };
 
+    const handleEdit = () => {
+        setEditMode(true);
+    };
+
+    const handleCancel = () => {
+        setEditMode(false);
+        setUpdatedData(workerData);
+        setNewImages({
+            profilePhoto: null,
+            aadhaarPhoto: null,
+            alternateDoc: null
+        });
+    };
+
+    if (loading || !workerData) {
         return (
-            <Image 
-                src={imageSrc} 
-                alt={alt} 
-                fluid 
-                className="rounded shadow-sm" 
-                style={{ width: '150px', height: '150px', objectFit: 'cover' }}
-                onError={(e) => {
-                    console.error(`Error loading ${alt} image`);
-                    e.target.style.display = "none";
-                }}
-            />
+            <Container className="text-center mt-5">
+                <Spinner animation="border" role="status">
+                    <span className="visually-hidden">Loading...</span>
+                </Spinner>
+                <p>Loading profile data...</p>
+            </Container>
         );
-    };
-
-    const renderField = (label, fieldName, type = "text", options = null) => {
-        const value = formData[fieldName] || '';
-        
-        if (isEditMode) {
-            if (type === "select" && options) {
-                return (
-                    <Form.Group className="mb-3">
-                        <Form.Label>{label}</Form.Label>
-                        <Form.Select 
-                            name={fieldName}
-                            value={value}
-                            onChange={handleInputChange}
-                            required={fieldName === 'fullName' || fieldName === 'contact'}
-                        >
-                            <option value="">Select {label}</option>
-                            {options.map((option, idx) => (
-                                <option key={idx} value={option.value || option.toLowerCase()}>
-                                    {option.label || option}
-                                </option>
-                            ))}
-                        </Form.Select>
-                    </Form.Group>
-                );
-            } else if (type === "checkbox") {
-                return (
-                    <Form.Group className="mb-3">
-                        <Form.Check 
-                            type="checkbox"
-                            name={fieldName}
-                            checked={!!value}
-                            onChange={handleInputChange}
-                            label={label}
-                        />
-                    </Form.Group>
-                );
-            } else {
-                return (
-                    <Form.Group className="mb-3">
-                        <Form.Label>{label}</Form.Label>
-                        <Form.Control 
-                            type={type}
-                            name={fieldName}
-                            value={value}
-                            onChange={handleInputChange}
-                            required={fieldName === 'fullName' || fieldName === 'contact'}
-                        />
-                    </Form.Group>
-                );
-            }
-        } else {
-            // Display mode
-            if (type === "checkbox") {
-                return <p className="mb-3"><strong>{label}:</strong> {value ? "Yes" : "No"}</p>;
-            } else {
-                return <p className="mb-3"><strong>{label}:</strong> {value || 'Not provided'}</p>;
-            }
-        }
-    };
+    }
 
     return (
-        <div className="container py-5">
-            <div className="row justify-content-center">
-                <div className="col-lg-10">
-                    <div className="card shadow border-0 rounded-lg mb-4">
-                        <div className="card-header bg-primary text-white d-flex justify-content-between align-items-center py-3">
-                            <h3 className="m-0 font-weight-bold">Worker Profile</h3>
-                            
-                        </div>
-                        
-                        <div className="card-body">
-                            {error && (
-                                <Alert variant="danger" dismissible onClose={() => setError(null)}>
-                                    <Alert.Heading>Error!</Alert.Heading>
-                                    <p>{error}</p>
-                                </Alert>
-                            )}
+        <Container className="worker-profile-container">
+            <ToastContainer
+                position="top-right"
+                autoClose={5000}
+                hideProgressBar={false}
+                newestOnTop={false}
+                closeOnClick
+                rtl={false}
+                pauseOnFocusLoss
+                draggable
+                pauseOnHover
+                theme="colored"
+            />
+            
+            <h2 className="profile-title">Worker Profile</h2>
 
-                            {success && (
-                                <Alert variant="success" dismissible onClose={() => setSuccess(null)}>
-                                    <Alert.Heading>Success!</Alert.Heading>
-                                    <p>{success}</p>
-                                </Alert>
-                            )}
-
-                            {/* Documents & Photos */}
-                            <h4 className="border-bottom pb-2 mb-4">Documents & Photos</h4>
-                            <Row className="mb-4">
-                                {['profilePhoto', 'aadhaarPhoto', 'alternateDoc'].map((docType) => (
-                                    <Col md={4} className="mb-3" key={docType}>
-                                        <div className="card h-100 border-0 shadow-sm">
-                                            <div className="card-header bg-secondary text-white py-2 text-capitalize">
-                                                {docType.replace(/([A-Z])/g, ' $1').trim()}
-                                            </div>
-                                            <div className="card-body d-flex flex-column align-items-center justify-content-center" 
-                                                 style={{ minHeight: '200px' }}>
-                                                <SafeImage 
-                                                    src={formData[docType]} 
-                                                    alt={docType.replace(/([A-Z])/g, ' $1').trim()} 
-                                                    imageType={docType}
-                                                />
-                                                {isEditMode && (
-                                                    <Form.Group className="mt-2 w-100">
-                                                        <Form.Control 
-                                                            type="file" 
-                                                            name={docType} 
-                                                            accept="image/*" 
-                                                            onChange={handleFileChange} 
-                                                            size="sm"
-                                                        />
-                                                        <Form.Text className="text-muted">
-                                                            Max 5MB (JPEG, PNG, GIF)
-                                                        </Form.Text>
-                                                    </Form.Group>
-                                                )}
-                                            </div>
-                                        </div>
-                                    </Col>
-                                ))}
-                            </Row>
-
-                            {/* Personal Information */}
-                            <div className="card shadow-sm border-0 mb-4">
-                                <div className="card-header bg-info text-white">
-                                    <h4 className="m-0">Personal Information</h4>
-                                </div>
-                                <div className="card-body">
-                                    <Row>
-                                        <Col md={6}>
-                                            {renderField("Full Name *", "fullName")}
-                                            {renderField("Worker ID", "workerId")}
-                                            {renderField("Age", "age", "number")}
-                                            {renderField("Date of Birth", "dateOfBirth", "date")}
-                                            {renderField("Gender", "gender", "select", [
-                                                { value: "male", label: "Male" },
-                                                { value: "female", label: "Female" },
-                                                { value: "other", label: "Other" }
-                                            ])}
-                                        </Col>
-                                        <Col md={6}>
-                                            {renderField("Marital Status", "maritalStatus", "select", [
-                                                { value: "single", label: "Single" },
-                                                { value: "married", label: "Married" },
-                                                { value: "divorced", label: "Divorced" },
-                                                { value: "widowed", label: "Widowed" }
-                                            ])}
-                                            {renderField("Contact *", "contact", "tel")}
-                                            {renderField("Emergency Contact", "emergencyContact", "tel")}
-                                            {renderField("Email", "email", "email")}
-                                        </Col>
-                                    </Row>
-
-                                    <h5 className="border-bottom pb-2 mb-3 mt-4">Address</h5>
-                                    <Row>
-                                        <Col md={12}>
-                                            {renderField("Street Address", "streetAddress")}
-                                        </Col>
-                                        <Col md={4}>
-                                            {renderField("District", "district")}
-                                        </Col>
-                                        <Col md={4}>
-                                            {renderField("State", "state")}
-                                        </Col>
-                                        <Col md={4}>
-                                            {renderField("Pincode", "pincode")}
-                                        </Col>
-                                    </Row>
-
-                                    <Row className="mt-3">
-                                        <Col md={6}>
-                                            {renderField("Physically Challenged", "physicallyHandicapped", "checkbox")}
-                                        </Col>
-                                        <Col md={6}>
-                                            {renderField("Critical Illness", "criticalIllness")}
-                                        </Col>
-                                    </Row>
-                                </div>
-                            </div>
-
-                            {/* Professional Details */}
-                            <div className="card shadow-sm border-0 mb-4">
-                                <div className="card-header bg-success text-white">
-                                    <h4 className="m-0">Professional Details</h4>
-                                </div>
-                                <div className="card-body">
-                                    <Row>
-                                        <Col md={6}>
-                                            {renderField("Skill Set", "skillSet")}
-                                            {renderField("Preferred Work Location", "preferredWorkLocation")}
-                                        </Col>
-                                        <Col md={6}>
-                                            {renderField("Skill Level", "skillLevel", "select", [
-                                                { value: "beginner", label: "Beginner" },
-                                                { value: "intermediate", label: "Intermediate" },
-                                                { value: "expert", label: "Expert" }
-                                            ])}
-                                            {renderField("Availability", "availability", "checkbox")}
-                                        </Col>
-                                    </Row>
-                                    <div>
-                                {isEditMode ? (
-                                    <>
-                                        <Button 
-                                            variant="success" 
-                                            onClick={handleSave} 
-                                            className="me-2"
-                                            disabled={isSaving}
-                                        >
-                                            {isSaving ? (
-                                                <>
-                                                    <Spinner animation="border" size="sm" className="me-2" />
-                                                    Saving...
-                                                </>
-                                            ) : 'Save Changes'}
-                                        </Button>
-                                        <Button 
-                                            variant="danger" 
-                                            onClick={toggleEditMode}
-                                            disabled={isSaving}
-                                        >
-                                            Cancel
-                                        </Button>
-                                    </>
+            {!editMode ? (
+                // View Mode
+                <div className="profile-view">
+                    <Row>
+                        <Col md={4}>
+                            <div className="profile-photo-container">
+                                {workerData.profilePhoto ? (
+                                    <Image 
+                                        src={workerData.profilePhoto} 
+                                        alt="Profile" 
+                                        fluid
+                                        className="profile-photo"
+                                    />
                                 ) : (
-                                    <Button 
-                                        variant="light" 
-                                        onClick={toggleEditMode} 
-                                        className="me-2"
-                                    >
-                                        Edit Profile
-                                    </Button>
+                                    <div className="no-photo">No Profile Photo</div>
                                 )}
-                                
-                        
-                        </div>
-                                </div>
                             </div>
-                        </div>
+
+                            <div className="verification-section mt-4">
+                                <h5>Verification Documents</h5>
+                                {workerData.aadhaarPhoto && (
+                                    <div className="document-preview mb-2">
+                                        <p>Aadhaar Card:</p>
+                                        <Image 
+                                            src={workerData.aadhaarPhoto} 
+                                            alt="Aadhaar Card" 
+                                            fluid
+                                            className="document-image"
+                                        />
+                                    </div>
+                                )}
+                                {workerData.alternateDoc && (
+                                    <div className="document-preview">
+                                        <p>Alternate Document:</p>
+                                        <Image 
+                                            src={workerData.alternateDoc} 
+                                            alt="Alternate Document" 
+                                            fluid
+                                            className="document-image"
+                                        />
+                                    </div>
+                                )}
+                            </div>
+                        </Col>
+
+                        <Col md={8}>
+                            <div className="personal-info-section">
+                                <h4>Personal Information</h4>
+                                <hr />
+                                <Row>
+                                    <Col md={6}>
+                                        <p><strong>Full Name:</strong> {workerData.fullName || "Not provided"}</p>
+                                        <p><strong>Age:</strong> {workerData.age || "Not provided"}</p>
+                                        <p><strong>Date of Birth:</strong> {workerData.dateOfBirth || "Not provided"}</p>
+                                        <p><strong>Gender:</strong> {workerData.gender || "Not provided"}</p>
+                                    </Col>
+                                    <Col md={6}>
+                                        <p><strong>Contact:</strong> {workerData.contact ? `+91 ${workerData.contact}` : "Not provided"}</p>
+                                        <p><strong>Emergency Contact:</strong> {workerData.emergencyContact ? `+91 ${workerData.emergencyContact}` : "Not provided"}</p>
+                                        <p><strong>Email:</strong> {workerData.email || "Not provided"}</p>
+                                        <p><strong>Marital Status:</strong> {workerData.maritalStatus || "Not provided"}</p>
+                                    </Col>
+                                </Row>
+
+                                <p className="mt-3"><strong>Address:</strong></p>
+                                <p>{workerData.streetAddress || "Not provided"}</p>
+                                <p>{workerData.district && `${workerData.district}, ${workerData.state} - ${workerData.pincode}`}</p>
+
+                                <p className="mt-3"><strong>Physically Challenged:</strong> {workerData.physicallyHandicapped || "Not provided"}</p>
+                                {workerData.criticalIllness && (
+                                    <p><strong>Critical Illness:</strong> {workerData.criticalIllness}</p>
+                                )}
+                            </div>
+
+                            <div className="professional-info-section mt-4">
+                                <h4>Professional Details</h4>
+                                <hr />
+                                <Row>
+                                    <Col md={6}>
+                                        <p><strong>Skill Set:</strong> {workerData.skillSet || "Not provided"}</p>
+                                        <p><strong>Skill Level:</strong> {workerData.skillLevel || "Not provided"}</p>
+                                    </Col>
+                                    <Col md={6}>
+                                        <p><strong>Preferred Work Location:</strong> {workerData.preferredWorkLocation || "Not provided"}</p>
+                                        <p><strong>Availability:</strong> {workerData.availability || "Not provided"}</p>
+                                    </Col>
+                                </Row>
+                            </div>
+                        </Col>
+                    </Row>
+                    <div className="text-end mb-4">
+                        <Button variant="primary" onClick={handleEdit}>
+                            Edit Profile
+                        </Button>
                     </div>
                 </div>
-            </div>
-        </div>
+            ) : (
+                // Edit Mode
+                <Form>
+                    {/* Personal Information */}
+                    <h3 className="section-title">Personal Information</h3>
+                    <Form.Group controlId="fullName" className="mb-3">
+                        <Form.Label>Full Name *</Form.Label>
+                        <Form.Control
+                            type="text"
+                            name="fullName"
+                            value={updatedData.fullName || ''}
+                            onChange={handleInputChange}
+                        />
+                    </Form.Group>
+
+                    <Row className="mb-3">
+                        <Col md={6}>
+                            <Form.Group controlId="age">
+                                <Form.Label>Age *</Form.Label>
+                                <Form.Control
+                                    type="number"
+                                    name="age"
+                                    value={updatedData.age || ''}
+                                    onChange={handleInputChange}
+                                />
+                            </Form.Group>
+                        </Col>
+                        <Col md={6}>
+                            <Form.Group controlId="dateOfBirth">
+                                <Form.Label>Date of Birth</Form.Label>
+                                <Form.Control
+                                    type="date"
+                                    name="dateOfBirth"
+                                    value={updatedData.dateOfBirth || ''}
+                                    onChange={handleInputChange}
+                                />
+                            </Form.Group>
+                        </Col>
+                    </Row>
+
+                    <Form.Group controlId="gender" className="mb-3">
+                        <Form.Label>Gender</Form.Label>
+                        <div>
+                            <Form.Check
+                                inline
+                                label="Male"
+                                name="gender"
+                                type="radio"
+                                value="male"
+                                checked={updatedData.gender === "male"}
+                                onChange={handleInputChange}
+                            />
+                            <Form.Check
+                                inline
+                                label="Female"
+                                name="gender"
+                                type="radio"
+                                value="female"
+                                checked={updatedData.gender === "female"}
+                                onChange={handleInputChange}
+                            />
+                            <Form.Check
+                                inline
+                                label="Other"
+                                name="gender"
+                                type="radio"
+                                value="other"
+                                checked={updatedData.gender === "other"}
+                                onChange={handleInputChange}
+                            />
+                        </div>
+                    </Form.Group>
+
+                    <Row className="mb-3">
+                        <Col md={6}>
+                            <Form.Group controlId="contact">
+                                <Form.Label>Contact Number *</Form.Label>
+                                <InputGroup>
+                                    <InputGroup.Text>+91</InputGroup.Text>
+                                    <Form.Control
+                                        type="tel"
+                                        name="contact"
+                                        value={updatedData.contact || ''}
+                                        onChange={handleInputChange}
+                                    />
+                                </InputGroup>
+                            </Form.Group>
+                        </Col>
+                        <Col md={6}>
+                            <Form.Group controlId="emergencyContact">
+                                <Form.Label>Emergency Contact</Form.Label>
+                                <InputGroup>
+                                    <InputGroup.Text>+91</InputGroup.Text>
+                                    <Form.Control
+                                        type="tel"
+                                        name="emergencyContact"
+                                        value={updatedData.emergencyContact || ''}
+                                        onChange={handleInputChange}
+                                    />
+                                </InputGroup>
+                            </Form.Group>
+                        </Col>
+                    </Row>
+
+                    <Form.Group controlId="email" className="mb-3">
+                        <Form.Label>Email Address</Form.Label>
+                        <Form.Control
+                            type="email"
+                            name="email"
+                            value={updatedData.email || ''}
+                            onChange={handleInputChange}
+                        />
+                    </Form.Group>
+
+                    <Form.Group controlId="streetAddress" className="mb-3">
+                        <Form.Label>Address</Form.Label>
+                        <Form.Control
+                            type="text"
+                            name="streetAddress"
+                            placeholder="Street Address"
+                            value={updatedData.streetAddress || ''}
+                            onChange={handleInputChange}
+                        />
+                    </Form.Group>
+
+                    <Row className="mb-3">
+                        <Col md={6}>
+                            <Form.Group controlId="district">
+                                <Form.Control
+                                    type="text"
+                                    name="district"
+                                    placeholder="District"
+                                    value={updatedData.district || ''}
+                                    onChange={handleInputChange}
+                                />
+                            </Form.Group>
+                        </Col>
+                        <Col md={6}>
+                            <Form.Group controlId="state">
+                                <Form.Control
+                                    type="text"
+                                    name="state"
+                                    placeholder="State"
+                                    value={updatedData.state || ''}
+                                    onChange={handleInputChange}
+                                />
+                            </Form.Group>
+                        </Col>
+                    </Row>
+
+                    <Form.Group controlId="pincode" className="mb-3">
+                        <Form.Control
+                            type="text"
+                            name="pincode"
+                            placeholder="Pincode"
+                            value={updatedData.pincode || ''}
+                            onChange={handleInputChange}
+                        />
+                    </Form.Group>
+
+                    <Form.Group controlId="maritalStatus" className="mb-3">
+                        <Form.Label>Marital Status</Form.Label>
+                        <Form.Select
+                            name="maritalStatus"
+                            value={updatedData.maritalStatus || ''}
+                            onChange={handleInputChange}
+                        >
+                            <option value="">Select Status</option>
+                            <option value="single">Single</option>
+                            <option value="married">Married</option>
+                            <option value="widow">Widow</option>
+                            <option value="divorced">Divorced</option>
+                        </Form.Select>
+                    </Form.Group>
+
+                    <Form.Group controlId="physicallyHandicapped" className="mb-3">
+                        <Form.Label>Physically Challenged</Form.Label>
+                        <div>
+                            <Form.Check
+                                inline
+                                label="Yes"
+                                name="physicallyHandicapped"
+                                type="radio"
+                                value="yes"
+                                checked={updatedData.physicallyHandicapped === "yes"}
+                                onChange={handleInputChange}
+                            />
+                            <Form.Check
+                                inline
+                                label="No"
+                                name="physicallyHandicapped"
+                                type="radio"
+                                value="no"
+                                checked={updatedData.physicallyHandicapped === "no"}
+                                onChange={handleInputChange}
+                            />
+                        </div>
+                    </Form.Group>
+
+                    <Form.Group controlId="criticalIllness" className="mb-3">
+                        <Form.Label>Critical Illness</Form.Label>
+                        <Form.Control
+                            as="textarea"
+                            name="criticalIllness"
+                            rows={3}
+                            value={updatedData.criticalIllness || ''}
+                            onChange={handleInputChange}
+                        />
+                    </Form.Group>
+
+                    {/* Professional Details */}
+                    <h3 className="section-title">Professional Details</h3>
+                    <Form.Group controlId="skillSet" className="mb-3">
+                        <Form.Label>Skill Set *</Form.Label>
+                        <Form.Select
+                            name="skillSet"
+                            value={updatedData.skillSet || ''}
+                            onChange={handleInputChange}
+                        >
+                            <option value="">Select Skill</option>
+                            <option value="Construction Work (Nirmaan Kaam)">
+                                Construction Work (Nirmaan Kaam)
+                            </option>
+                            <option value="Brick Work (Eet Uthana aur Lagana)">
+                                Brick Work (Eet Uthana aur Lagana)
+                            </option>
+                            <option value="Cement Mixing (Cement Milana)">
+                                Cement Mixing (Cement Milana)
+                            </option>
+                            <option value="Digging Work (Gadda Khodna)">
+                                Digging Work (Gadda Khodna)
+                            </option>
+                            <option value="Painting Work (Rangai Putai)">
+                                Painting Work (Rangai Putai)
+                            </option>
+                            <option value="Loading and Unloading (Bojh Uthana aur Utarna)">
+                                Loading and Unloading (Bojh Uthana aur Utarna)
+                            </option>
+                            <option value="Road Cleaning (Sadak Safai)">
+                                Road Cleaning (Sadak Safai)
+                            </option>
+                            <option value="Building Cleaning (Imarat Safai)">
+                                Building Cleaning (Imarat Safai)
+                            </option>
+                            <option value="Toilet Cleaning (Sauchalaya Safai)">
+                                Toilet Cleaning (Sauchalaya Safai)
+                            </option>
+                            <option value="Farming Work (Kheti Ka Kaam)">
+                                Farming Work (Kheti Ka Kaam)
+                            </option>
+                            <option value="Cutting Crops (Fasal Kaatna)">
+                                Cutting Crops (Fasal Kaatna)
+                            </option>
+                            <option value="Planting Seeds (Beej Bona)">
+                                Planting Seeds (Beej Bona)
+                            </option>
+                            <option value="Watering Fields (Paani Dena)">
+                                Watering Fields (Paani Dena)
+                            </option>
+                            <option value="Removing Weeds (Ghas Phus Hatana)">
+                                Removing Weeds (Ghas Phus Hatana)
+                            </option>
+                            <option value="Road Making (Sadak Banana)">
+                                Road Making (Sadak Banana)
+                            </option>
+                            <option value="Tar and Concrete Work (Tar aur Cement Ka Kaam)">
+                                Tar and Concrete Work (Tar aur Cement Ka Kaam)
+                            </option>
+                            <option value="Helper Work (Madadgaar Kaam)">
+                                Helper Work (Madadgaar Kaam)
+                            </option>
+                            <option value="Shop Helper (Dukaan Mein Madad Karna)">
+                                Shop Helper (Dukaan Mein Madad Karna)
+                            </option>
+                            <option value="Loading Goods in Market (Bazaar Mein Saman Ladna)">
+                                Loading Goods in Market (Bazaar Mein Saman Ladna)
+                            </option>
+                            <option value="Transport Work (Parivahan Ka Kaam)">
+                                Transport Work (Parivahan Ka Kaam)
+                            </option>
+                            <option value="Rickshaw or Cart Pulling (Thela Chalana)">
+                                Rickshaw or Cart Pulling (Thela Chalana)
+                            </option>
+                            <option value="Factory Work (Factory Mein Kaam)">
+                                Factory Work (Factory Mein Kaam)
+                            </option>
+                            <option value="Packing Work (Saman Pack Karna)">
+                                Packing Work (Saman Pack Karna)
+                            </option>
+                            <option value="Machine Cleaning (Machine Saaf Karna)">
+                                Machine Cleaning (Machine Saaf Karna)
+                            </option>
+                            <option value="House Cleaning (Ghar Ki Safai)">
+                                House Cleaning (Ghar Ki Safai)
+                            </option>
+                            <option value="Washing Utensils (Bartan Dhona)">
+                                Washing Utensils (Bartan Dhona)
+                            </option>
+                            <option value="Washing Clothes (Kapde Dhona)">
+                                Washing Clothes (Kapde Dhona)
+                            </option>
+                        </Form.Select>
+                    </Form.Group>
+
+                    <Form.Group controlId="skillLevel" className="mb-3">
+                        <Form.Label>Skill Level *</Form.Label>
+                        <Form.Select
+                            name="skillLevel"
+                            value={updatedData.skillLevel || ''}
+                            onChange={handleInputChange}
+                        >
+                            <option value="">Select Skill Level</option>
+                            <option value="Expert">Level 1 (Expert)</option>
+                            <option value="Moderate">Level 2 (Moderate)</option>
+                            <option value="Learning">Level 3 (Learning)</option>
+                        </Form.Select>
+                    </Form.Group>
+
+                    <Form.Group controlId="preferredWorkLocation" className="mb-3">
+                        <Form.Label>Preferred Work Location *</Form.Label>
+                        <Form.Control
+                            type="text"
+                            name="preferredWorkLocation"
+                            value={updatedData.preferredWorkLocation || ''}
+                            onChange={handleInputChange}
+                        />
+                    </Form.Group>
+
+                    <Form.Group controlId="availability" className="mb-3">
+                        <Form.Label>Availability *</Form.Label>
+                        <Form.Select
+                            name="availability"
+                            value={updatedData.availability || ''}
+                            onChange={handleInputChange}
+                        >
+                            <option value="">Select Availability</option>
+                            <option value="Part-time">Part-time</option>
+                            <option value="Full-time">Full-time</option>
+                        </Form.Select>
+                    </Form.Group>
+
+                    {/* Verification Documents */}
+                    <h3 className="section-title">Verification Documents</h3>
+                    <Row className="mb-3">
+                        <Col md={4}>
+                            <Form.Label>Profile Photo</Form.Label>
+                            <div className="mb-2">
+                                <Image 
+                                    src={newImages.profilePhoto || updatedData.profilePhoto} 
+                                    alt="Profile" 
+                                    fluid 
+                                    className="mb-2"
+                                    style={{ maxHeight: '150px' }}
+                                />
+                            </div>
+                            <Form.Control
+                                type="file"
+                                onChange={(e) => handleImageChange(e, 'profilePhoto')}
+                                accept="image/*"
+                            />
+                        </Col>
+                        <Col md={4}>
+                            <Form.Label>Aadhaar Card</Form.Label>
+                            <div className="mb-2">
+                                <Image 
+                                    src={newImages.aadhaarPhoto || updatedData.aadhaarPhoto} 
+                                    alt="Aadhaar" 
+                                    fluid 
+                                    className="mb-2"
+                                    style={{ maxHeight: '150px' }}
+                                />
+                            </div>
+                            <Form.Control
+                                type="file"
+                                onChange={(e) => handleImageChange(e, 'aadhaarPhoto')}
+                                accept="image/*"
+                            />
+                        </Col>
+                        <Col md={4}>
+                            <Form.Label>Alternate Document</Form.Label>
+                            <div className="mb-2">
+                                <Image 
+                                    src={newImages.alternateDoc || updatedData.alternateDoc} 
+                                    alt="Alternate Document" 
+                                    fluid 
+                                    className="mb-2"
+                                    style={{ maxHeight: '150px' }}
+                                />
+                            </div>
+                            <Form.Control
+                                type="file"
+                                onChange={(e) => handleImageChange(e, 'alternateDoc')}
+                                accept="image/*"
+                            />
+                        </Col>
+                    </Row>
+
+                    <div className="text-end mb-4">
+                        <Button variant="secondary" onClick={handleCancel} className="me-2">
+                            Cancel
+                        </Button>
+                        <Button variant="primary" onClick={handleSubmit}>
+                            Save Changes
+                        </Button>
+                    </div>
+                </Form>
+            )}
+        </Container>
     );
 };
 
-export default WorkerHome;
+export default WorkerProfile;

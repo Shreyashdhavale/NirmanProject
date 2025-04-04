@@ -1,0 +1,212 @@
+/* WorkerProfile.css */
+:root {
+    --primary-color: #3a86ff;
+    --primary-hover: #2a75f0;
+    --secondary-color: #8d99ae;
+    --light-bg: #f8f9fa;
+    --border-color: #dee2e6;
+    --text-color: #333;
+    --success-color: #52b788;
+    --danger-color: #e76f51;
+  }
+  
+  .worker-profile-container {
+    padding: 2rem 1rem;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  
+  .profile-title {
+    color: var(--text-color);
+    margin-bottom: 1.5rem;
+    font-weight: 600;
+    border-bottom: 2px solid var(--primary-color);
+    padding-bottom: 0.5rem;
+  }
+  
+  .section-title {
+    color: var(--text-color);
+    margin: 1.5rem 0 1rem;
+    font-size: 1.4rem;
+    font-weight: 500;
+  }
+  
+  /* Profile View Styling */
+  .profile-view {
+    background-color: var(--light-bg);
+    border-radius: 8px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  }
+  
+  .profile-photo-container {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 1rem;
+  }
+  
+  .profile-photo {
+    width: 180px;
+    height: 180px;
+    object-fit: cover;
+    border-radius: 50%;
+    border: 3px solid var(--primary-color);
+  }
+  
+  .no-photo {
+    width: 180px;
+    height: 180px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--secondary-color);
+    color: white;
+    border-radius: 50%;
+    font-weight: 500;
+  }
+  
+  .verification-section h5 {
+    font-size: 1.1rem;
+    margin-bottom: 1rem;
+    color: var(--text-color);
+  }
+  
+  .document-preview {
+    margin-bottom: 1rem;
+  }
+  
+  .document-preview p {
+    margin-bottom: 0.3rem;
+    font-weight: 500;
+  }
+  
+  .document-image {
+    max-height: 150px;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+  }
+  
+  .personal-info-section, 
+  .professional-info-section {
+    background-color: white;
+    border-radius: 6px;
+    padding: 1.25rem;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+  }
+  
+  .personal-info-section h4, 
+  .professional-info-section h4 {
+    color: var(--primary-color);
+    font-size: 1.3rem;
+    margin-bottom: 0.5rem;
+  }
+  
+  .personal-info-section hr, 
+  .professional-info-section hr {
+    margin: 0.5rem 0 1rem;
+    border-color: var(--border-color);
+  }
+  
+  .personal-info-section p, 
+  .professional-info-section p {
+    margin-bottom: 0.5rem;
+    line-height: 1.5;
+  }
+  
+  /* Form Styling */
+  .form-label {
+    font-weight: 500;
+    color: var(--text-color);
+  }
+  
+  .form-control, .form-select {
+    border-color: var(--border-color);
+    border-radius: 6px;
+    padding: 0.5rem 0.75rem;
+    transition: border-color 0.2s;
+  }
+  
+  .form-control:focus, .form-select:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.2rem rgba(58, 134, 255, 0.25);
+  }
+  
+  .input-group-text {
+    background-color: var(--light-bg);
+    color: var(--text-color);
+    border-color: var(--border-color);
+  }
+  
+  /* Button Styling */
+  .btn-primary {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+  }
+  
+  .btn-primary:hover {
+    background-color: var(--primary-hover);
+    border-color: var(--primary-hover);
+  }
+  
+  .btn-secondary {
+    background-color: var(--secondary-color);
+    border-color: var(--secondary-color);
+  }
+  
+  /* Alert styling */
+  .alert-success {
+    background-color: var(--success-color);
+    border-color: var(--success-color);
+    color: white;
+  }
+  
+  .alert-danger {
+    background-color: var(--danger-color);
+    border-color: var(--danger-color);
+    color: white;
+  }
+  
+  /* Responsive adjustments */
+  @media (max-width: 768px) {
+    .profile-view {
+      padding: 1rem;
+    }
+  
+    .profile-photo {
+      width: 150px;
+      height: 150px;
+    }
+  
+    .no-photo {
+      width: 150px;
+      height: 150px;
+    }
+  
+    .personal-info-section, 
+    .professional-info-section {
+      padding: 1rem;
+      margin-top: 1.5rem;
+    }
+  }
+  .Toastify__toast-container {
+    margin-top: 70px;
+  }
+  
+  .Toastify__toast {
+    border-radius: 8px;
+    font-family: 'Arial', sans-serif;
+    font-size: 14px;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
+  }
+  
+  .Toastify__toast--success {
+    background: #3498db;
+  }
+  
+  .Toastify__toast--error {
+    background: #e74c3c;
+  }
+  
+  .Toastify__close-button {
+    align-self: center;
+  }

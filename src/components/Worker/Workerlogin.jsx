@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import 'bootstrap/dist/css/bootstrap.min.css';
+import Workerhome from "./Workerhome.jsx";
 
 const WorkerLogin = ({ onLogin }) => {
     const [workerId, setWorkerId] = useState("");
@@ -29,8 +30,11 @@ const WorkerLogin = ({ onLogin }) => {
             const data = await response.json();
 
             if (data && data.workerId) {
-                onLogin({ ...data, type: "worker" }); // Call onLogin to update state in App.js
-                navigate('/worker-home'); // Redirect to worker home after login
+                onLogin({ ...data, type: "worker" , workerId}); // Call onLogin to update state in App.js
+                navigate('/worker-home', {
+                    state: { workerId }
+                  });
+                  // Redirect to worker home after login
             } else {
                 throw new Error('Worker not found or invalid response');
             }
