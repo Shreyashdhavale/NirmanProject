@@ -46,8 +46,7 @@ const CustomNavbar = ({ isAuthenticated, user, homeRoute, profileSliderOpen, set
                 Home
               </Nav.Link>
 
-              {/* Show Contact and About Us only if user is NOT logged in as NGO or Provider */}
-              {(!isAuthenticated  ||(user?.type !== "ngo" && user?.type !== "provider")) && (
+              {(!isAuthenticated || (user?.type !== "ngo" && user?.type !== "provider" && user?.type !== "worker")) && (
                 <>
                   <Nav.Link as={Link} to="/contact" className="px-4">
                     Contact
@@ -77,8 +76,10 @@ const CustomNavbar = ({ isAuthenticated, user, homeRoute, profileSliderOpen, set
                   Job Request Form
                 </Nav.Link>
               )}
-            </Nav>
 
+              {/* Worker specific navbar items removed as requested */}
+            </Nav>
+           
             <Nav className="d-flex align-items-center justify-content-center">
               {!isAuthenticated ? (
                 <div className="d-flex gap-2 flex-column flex-lg-row align-items-center">
@@ -87,12 +88,9 @@ const CustomNavbar = ({ isAuthenticated, user, homeRoute, profileSliderOpen, set
                       Login
                     </Dropdown.Toggle>
                     <Dropdown.Menu className="w-100">
-                      <Dropdown.Item as={Link} to="/login/ngo">
-                        As NGO
-                      </Dropdown.Item>
-                      <Dropdown.Item as={Link} to="/login/provider">
-                        As Job Provider
-                      </Dropdown.Item>
+                      <Dropdown.Item as={Link} to="/login/ngo">As NGO</Dropdown.Item>
+                      <Dropdown.Item as={Link} to="/login/provider">As Job Provider</Dropdown.Item>
+                      <Dropdown.Item as={Link} to="/login/worker">As Worker</Dropdown.Item>
                     </Dropdown.Menu>
                   </Dropdown>
 
@@ -101,12 +99,9 @@ const CustomNavbar = ({ isAuthenticated, user, homeRoute, profileSliderOpen, set
                       Signup
                     </Dropdown.Toggle>
                     <Dropdown.Menu className="w-100">
-                      <Dropdown.Item as={Link} to="/signup/ngo">
-                        As NGO
-                      </Dropdown.Item>
-                      <Dropdown.Item as={Link} to="/signup/provider">
-                        As Job Provider
-                      </Dropdown.Item>
+                      <Dropdown.Item as={Link} to="/signup/ngo">As NGO</Dropdown.Item>
+                      <Dropdown.Item as={Link} to="/signup/provider">As Job Provider</Dropdown.Item>
+                      <Dropdown.Item as={Link} to="/signup/worker">As Worker</Dropdown.Item>
                     </Dropdown.Menu>
                   </Dropdown>
                 </div>
@@ -115,20 +110,28 @@ const CustomNavbar = ({ isAuthenticated, user, homeRoute, profileSliderOpen, set
                   <span className="fw-bold d-none d-lg-inline">
                     {user?.name}
                   </span>
-                  <Avatar
-                    ref={profileButtonRef}
-                    src={user?.profileImage || undefined}
-                    sx={{
-                      width: 45,
-                      height: 45,
-                      bgcolor: "#007bff",
-                      cursor: "pointer",
-                      fontSize: "1rem"
-                    }}
-                    onClick={() => setProfileSliderOpen(!profileSliderOpen)}
-                  >
-                    {user?.name ? user.name.charAt(0).toUpperCase() : "U"}
-                  </Avatar>
+                  <div className="d-flex align-items-center">
+                    <button 
+                      className="btn btn-danger me-2"
+                      onClick={handleLogout}
+                    >
+                      Logout
+                    </button>
+                    <Avatar
+                      ref={profileButtonRef}
+                      src={user?.profileImage || undefined}
+                      sx={{
+                        width: 45,
+                        height: 45,
+                        bgcolor: "#007bff",
+                        cursor: "pointer",
+                        fontSize: "1rem"
+                      }}
+                      onClick={() => setProfileSliderOpen(!profileSliderOpen)}
+                    >
+                      {user?.name ? user.name.charAt(0).toUpperCase() : "U"}
+                    </Avatar>
+                  </div>
                 </div>
               )}
             </Nav>
@@ -136,7 +139,6 @@ const CustomNavbar = ({ isAuthenticated, user, homeRoute, profileSliderOpen, set
         </Container>
       </Navbar>
 
-      {/* Profile Slider */}
       <div ref={sliderRef} className={`profile-slider ${profileSliderOpen ? 'open' : ''}`}>
         <div className="p-4">
           <h4 className="mb-4">{user?.name}'s Profile</h4>
