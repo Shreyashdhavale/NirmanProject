@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './JobRequest.css';
-import { Modal } from 'bootstrap';
+
 const JobRequest = () => {
   const [jobRequests, setJobRequests] = useState([]);
   const [filteredRequests, setFilteredRequests] = useState([]);
@@ -45,29 +45,36 @@ const JobRequest = () => {
 
     fetchJobRequests();
   }, []);
-//fetchEmployerDetails
 
-const fetchEmployerDetails = async (employerId) => {
-  try {
-    setLoadingEmployer(true);
-    setEmployerError(null);
-    
-    const response = await axios.get(`${API_BASE_URL}/employers/${employerId}`);
-    setSelectedEmployer(response.data);
-    
-    setLoadingEmployer(false);
-  } catch (error) {
-    console.error("Error fetching employer details:", error);
-    setEmployerError("Failed to load employer details.");
-    setLoadingEmployer(false);
-  }
-};
+  // Fetch employer details
+  const fetchEmployerDetails = async (employerId) => {
+    try {
+      setLoadingEmployer(true);
+      setEmployerError(null);
+      
+      const response = await axios.get(`${API_BASE_URL}/employers/${employerId}`);
+      setSelectedEmployer(response.data);
+      
+      setLoadingEmployer(false);
+    } catch (error) {
+      console.error("Error fetching employer details:", error);
+      setEmployerError("Failed to load employer details.");
+      setLoadingEmployer(false);
+    }
+  };
+
   // Fetch workers from API
   const fetchWorkers = async () => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/workers`);
+      // If a specific job request is selected, use the eligible-workers endpoint
+      let endpoint = selectedRequest 
+        ? `${API_BASE_URL}/jobs/${selectedRequest.jobRequestId}/eligible-workers`
+        : `${API_BASE_URL}/workers`;
+        
+      const response = await axios.get(endpoint);
       setWorkers(response.data);
-      console.log(response.data);
+      setFilteredWorkers(response.data);
+      console.log("Fetched workers:", response.data);
     } catch (err) {
       console.error('Error fetching workers:', err);
       setNotification({
@@ -77,7 +84,7 @@ const fetchEmployerDetails = async (employerId) => {
     }
   };
 
-  // Apply filters and sorting for job requests
+  // Apply filters and sorting for job requests - UPDATED
   useEffect(() => {
     let results = [...jobRequests];
     
@@ -86,13 +93,19 @@ const fetchEmployerDetails = async (employerId) => {
       results = results.filter(job => 
         job.jobTitle.toLowerCase().includes(searchTerm.toLowerCase()) ||
         job.jobDescription.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        job.location.toLowerCase().includes(searchTerm.toLowerCase())
+        job.workLocation.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
-    // Apply status filter
+    // Apply status filter (map to workerAssignedStatus)
     if (statusFilter !== 'all') {
-      results = results.filter(job => job.status === statusFilter);
+      // Convert frontend status values to backend values
+      const statusMapping = {
+        'pending': 'Pending',
+        'assigned': 'Assigned',
+        'completed': 'Completed'
+      };
+      results = results.filter(job => job.workerAssignedStatus === statusMapping[statusFilter]);
     }
 
     // Apply sorting
@@ -146,7 +159,9 @@ const fetchEmployerDetails = async (employerId) => {
     setSelectedRequest(request);
     setShowAssignModal(true);
     setWorkerSearchTerm('');
-    fetchWorkers();
+    setWorkers([]); // Reset workers list before fetching
+    setFilteredWorkers([]);
+    fetchWorkers(); // This will now use the eligible-workers endpoint
   };
 
   // Handle worker search input change
@@ -156,15 +171,16 @@ const fetchEmployerDetails = async (employerId) => {
 
   // Select a worker for assignment
   const handleSelectWorker = (worker) => {
+    console.log("Selected Worker:", worker); // Debugging log
     setSelectedWorker(worker);
     setShowConfirmationModal(true);
   };
+  
 
-  // Confirm worker assignment and update the job request in the database
+  // Confirm worker assignment and update the job request in the database - UPDATED
   const handleConfirmAssignment = async () => {
     try {
       // API call to assign worker to the job request.
-      // Backend endpoint now expects an array (even if one worker is assigned at a time)
       await axios.post(
         `${API_BASE_URL}/jobs/${selectedRequest.jobRequestId}/assign-workers`,
         [selectedWorker.workerId]
@@ -174,16 +190,16 @@ const fetchEmployerDetails = async (employerId) => {
       const updatedRequests = jobRequests.map(req => {
         if (req.jobRequestId === selectedRequest.jobRequestId) {
           // Initialize assignedWorkers if not already set
-          let assignedWorkers = req.assignedWorkers ? [...req.assignedWorkers] : [];
+          let assignedWorkers = req.assignedWorkerIds ? [...req.assignedWorkerIds] : [];
           // Add the new worker if not already assigned
           if (!assignedWorkers.includes(selectedWorker.workerId)) {
             assignedWorkers.push(selectedWorker.workerId);
           }
-          // Only change status to "assigned" if the required number of workers is met
+          // Only change status to "Assigned" if the required number of workers is met
           const updatedStatus = (assignedWorkers.length >= req.numOfWorkers)
-            ? 'assigned'
-            : req.status; // could remain 'pending' or another state
-          return { ...req, assignedWorkers, status: updatedStatus };
+            ? 'Assigned'
+            : req.workerAssignedStatus; // Maintain current status if not all workers assigned
+          return { ...req, assignedWorkerIds: assignedWorkers, workerAssignedStatus: updatedStatus };
         }
         return req;
       });
@@ -192,7 +208,7 @@ const fetchEmployerDetails = async (employerId) => {
       setNotification({
         type: 'success',
         message: `Worker ${selectedWorker.fullName} has been added to ${selectedRequest.jobTitle}.` +
-                 ` ${selectedRequest.numOfWorkers - (selectedRequest.assignedWorkers ? selectedRequest.assignedWorkers.length + 1 : 1)} more worker(s) required.`
+                 ` ${selectedRequest.numOfWorkers - (selectedRequest.assignedWorkerIds ? selectedRequest.assignedWorkerIds.length + 1 : 1)} more worker(s) required.`
       });
   
       // Close modals and reset selected items
@@ -241,7 +257,7 @@ const fetchEmployerDetails = async (employerId) => {
     return new Date(dateString).toLocaleDateString(undefined, options);
   };
 
-  // Render list of job requests
+  // Render list of job requests - UPDATED
   const renderJobRequests = () => {
     if (loading) {
       return (
@@ -276,11 +292,17 @@ const fetchEmployerDetails = async (employerId) => {
         <div className="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
           {filteredRequests.map((request) => (
             <div className="col" key={request.jobRequestId}>
-              <div className={`card h-100 job-request-card ${request.status === 'assigned' ? 'border-success' : request.status === 'completed' ? 'border-info' : 'border-warning'}`}>
+              <div className={`card h-100 job-request-card ${
+                request.workerAssignedStatus === 'Assigned' ? 'border-success' : 
+                request.workerAssignedStatus === 'Completed' ? 'border-info' : 
+                'border-warning'}`}>
                 <div className="card-header d-flex justify-content-between align-items-center">
                   <h5 className="card-title mb-0">{request.jobTitle}</h5>
-                  <span className={`badge ${request.status === 'assigned' ? 'bg-success' : request.status === 'completed' ? 'bg-info' : 'bg-warning'}`}>
-                    {request.status || 'Pending'}
+                  <span className={`badge ${
+                    request.workerAssignedStatus === 'Assigned' ? 'bg-success' : 
+                    request.workerAssignedStatus === 'Completed' ? 'bg-info' : 
+                    'bg-warning'}`}>
+                    {request.workerAssignedStatus || 'Pending'}
                   </span>
                 </div>
                 <div className="card-body">
@@ -296,7 +318,7 @@ const fetchEmployerDetails = async (employerId) => {
                   {/* View Employer Details Button */}
                   <button 
                     className="btn btn-outline-primary"
-                    onClick={() => fetchEmployerDetails(request.employerId)}
+                    onClick={() => fetchEmployerDetails(request.jobProviderId)}
                     data-bs-toggle="modal"
                     data-bs-target="#employerDetailsModal"
                   > 
@@ -306,9 +328,9 @@ const fetchEmployerDetails = async (employerId) => {
                   <button 
                     className="btn btn-primary"
                     onClick={() => handleAssignClick(request)}
-                    disabled={request.status === 'completed'}
+                    disabled={request.workerAssignedStatus === 'Completed'}
                   >
-                    {request.status === 'assigned' ? 'Reassign' : 'Assign Workers'}
+                    {request.workerAssignedStatus === 'Assigned' ? 'Reassign' : 'Assign Workers'}
                   </button>
                 </div>
               </div>
@@ -349,7 +371,8 @@ const fetchEmployerDetails = async (employerId) => {
         </div>
       </>
     );
-  }    
+  };
+
   // Render list of workers in assign modal
   const renderWorkersList = () => {
     if (filteredWorkers.length === 0) {
@@ -362,34 +385,34 @@ const fetchEmployerDetails = async (employerId) => {
 
     return (
       <div className="row row-cols-1 row-cols-md-2 g-3 mt-2">
-        {filteredWorkers.map((worker) => (
-          <div className="col" key={worker.workerId}>
-            <div className="card worker-card h-100">
-              <div className="card-body">
-                <h5 className="card-title">{worker.fullName}</h5>
-                <p className="card-text">
-                  <strong>Skills:</strong> {worker.skillSet}
-                </p>
-                <p className="card-text">
-                  <strong>Skill Level:</strong> {worker.skillLevel} 
-                </p>
-                <p className="card-text">
-                  <strong>Availability:</strong> {worker.availability ? 'Available' : 'Busy'}
-                </p>
-              </div>
-              <div className="card-footer">
-                <button 
-                  className="btn btn-success w-100"
-                  onClick={() => handleSelectWorker(worker)}
-                  disabled={!worker.availability}
-                >
-                  Select
-                </button>
-              </div>
+      {filteredWorkers.map((worker) => (
+        <div className="col" key={worker.workerId}>
+          <div className="card worker-card h-100">
+            <div className="card-body">
+              <h5 className="card-title">{worker.fullName}</h5>
+              <p className="card-text">
+                <strong>Skills:</strong> {worker.skillSet}
+              </p>
+              <p className="card-text">
+                <strong>Skill Level:</strong> {worker.skillLevel} 
+              </p>
+              <p className="card-text">
+                <strong>Availability:</strong> {worker.availability === "true" ? 'Available' : 'Busy'}
+              </p>
+            </div>
+            <div className="card-footer">
+              <button 
+                className="btn btn-success w-100"
+                onClick={() => handleSelectWorker(worker)}
+                disabled={worker.availability !== "true"}
+              >
+                Select
+              </button>
             </div>
           </div>
-        ))}
-      </div>
+        </div>
+      ))}
+    </div>
     );
   };
 
