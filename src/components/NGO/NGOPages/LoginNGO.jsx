@@ -1,80 +1,121 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Form, Button, Container } from 'react-bootstrap';
-import { toast, ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { Form, Container, Card, Row, Col } from "react-bootstrap";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import "./LoginNGO.css";
+
 const LoginNGO = ({ onLogin }) => {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
-  const [credentials, setCredentials] = useState({ email: '', password: '' });
 
-  const handleChange = (e) => {
-    setCredentials({ ...credentials, [e.target.name]: e.target.value });
-  };
+  const handleFakeLogin = (e) => {
+    e.preventDefault();
 
-  const handleSubmit = async (event) => {
-    event.preventDefault();
+    if (!email || !password) {
+      toast.error("Please enter both email and password");
+      return;
+    }
 
-    try {
-      const response = await fetch('http://localhost:8080/api/ngo/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(credentials),
+    setIsLoading(true);
+
+    setTimeout(() => {
+      const userData = {
+        name: "Test NGO",
+        type: "ngo",
+        email: email,
+      };
+
+      onLogin(userData);
+
+      toast.success("Logged in successfully! 🎉", {
+        style: {
+          background: "linear-gradient(135deg, #6a11cb 0%, #2575fc 100%)",
+          border: "none",
+        },
       });
 
-      const result = await response.json();
+      setTimeout(() => {
+        navigate("/ngohome", { state: { email } });
+      }, 2000);
 
-      if (response.ok) {
-        toast.success('Login successful! Redirecting...', { autoClose: 2000 });
-        
-        onLogin(result);  // Store user info
-        setTimeout(() => {
-          navigate('/ngohome'); // Redirect after toast
-        }, 2000);
-      } else {
-        toast.error(result.message || 'Invalid credentials. Please try again.');
-      }
-    } catch (error) {
-      toast.error('An error occurred while logging in. Please try again later.');
-      console.error('Login error:', error);
-    }
+      setIsLoading(false);
+    }, 1500); // Simulating delay
   };
 
   return (
-    <Container className="mt-5" style={{ maxWidth: '500px' }}>
-      <h2>NGO Login</h2>
+    <div className="login-container d-flex align-items-center justify-content-center">
+      <Container>
+        <Row className="justify-content-center">
+          <Col xs={12} sm={10} md={8} lg={6} xl={5}>
+            <Card className="login-card shadow">
+              <Card.Body className="p-4 p-md-5">
+                <div className="text-center mb-4">
+                  <h2 className="login-title">NGO Login</h2>
+                  <p className="text-muted">Welcome back! Please sign in to continue</p>
+                </div>
 
-      <Form onSubmit={handleSubmit}>
-        <Form.Group controlId="ngoLoginEmail" className="mb-3">
-          <Form.Label>Email address</Form.Label>
-          <Form.Control
-            type="email"
-            name="email"
-            placeholder="Enter email"
-            value={credentials.email}
-            onChange={handleChange}
-            required
-          />
-        </Form.Group>
+                <Form onSubmit={handleFakeLogin}>
+                  <Form.Group controlId="ngoLoginEmail" className="form-group mb-4">
+                    <Form.Label>Email Address</Form.Label>
+                    <div className="input-group">
+                      <span className="input-group-text">
+                        <i className="fas fa-envelope"></i>
+                      </span>
+                      <Form.Control
+                        type="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        required
+                        placeholder="Enter your email"
+                        className="form-input"
+                        disabled={isLoading}
+                      />
+                    </div>
+                  </Form.Group>
 
-        <Form.Group controlId="ngoLoginPassword" className="mb-3">
-          <Form.Label>Password</Form.Label>
-          <Form.Control
-            type="password"
-            name="password"
-            placeholder="Password"
-            value={credentials.password}
-            onChange={handleChange}
-            required
-          />
-        </Form.Group>
+                  <Form.Group controlId="ngoLoginPassword" className="form-group mb-4">
+                    <Form.Label>Password</Form.Label>
+                    <div className="input-group">
+                      <span className="input-group-text">
+                        <i className="fas fa-lock"></i>
+                      </span>
+                      <Form.Control
+                        type="password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        required
+                        placeholder="Enter your password"
+                        className="form-input"
+                        disabled={isLoading}
+                      />
+                    </div>
+                  </Form.Group>
 
-        <Button variant="primary" type="submit">
-          Login
-        </Button>
-      </Form>
-      <ToastContainer style={{ zIndex: 9999 }} />
-      <ToastContainer />
-    </Container>
+                  <button 
+                    type="submit" 
+                    className="btn-login w-100 py-2 mb-3" 
+                    style={{
+                      background: "linear-gradient(135deg, #6a11cb 0%, #2575fc 100%)",
+                      border: "none",
+                      color: "#fff",
+                      fontWeight: "bold"
+                    }}
+                    disabled={isLoading}
+                  >
+                    {isLoading ? "Signing In..." : "Sign In"}
+                  </button>
+                </Form>
+              </Card.Body>
+            </Card>
+          </Col>
+        </Row>
+      </Container>
+
+      <ToastContainer position="top-right" autoClose={3000} />
+    </div>
   );
 };
 
