@@ -11,39 +11,48 @@ const LoginNGO = ({ onLogin }) => {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
-  const handleFakeLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
-
+  
     if (!email || !password) {
       toast.error("Please enter both email and password");
       return;
     }
-
+  
     setIsLoading(true);
-
-    setTimeout(() => {
-      const userData = {
-        name: "Test NGO",
-        type: "ngo",
-        email: email,
-      };
-
-      onLogin(userData);
-
+  
+    try {
+      const response = await fetch("http://localhost:8080/api/ngo/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+  
+      const data = await response.json();
+  
+      if (!response.ok) {
+        throw new Error(data.message || "Login failed");
+      }
+  
+      onLogin(data);
+  
       toast.success("Logged in successfully! 🎉", {
         style: {
           background: "linear-gradient(135deg, #6a11cb 0%, #2575fc 100%)",
           border: "none",
         },
       });
-
+  
       setTimeout(() => {
         navigate("/ngohome", { state: { email } });
       }, 2000);
-
+    } catch (error) {
+      toast.error(error.message);
+    } finally {
       setIsLoading(false);
-    }, 1500); // Simulating delay
+    }
   };
+  ;
 
   return (
     <div className="login-container d-flex align-items-center justify-content-center">
@@ -57,7 +66,7 @@ const LoginNGO = ({ onLogin }) => {
                   <p className="text-muted">Welcome back! Please sign in to continue</p>
                 </div>
 
-                <Form onSubmit={handleFakeLogin}>
+                <Form onSubmit={handleLogin}>
                   <Form.Group controlId="ngoLoginEmail" className="form-group mb-4">
                     <Form.Label>Email Address</Form.Label>
                     <div className="input-group">

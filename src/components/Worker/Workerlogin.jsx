@@ -13,7 +13,7 @@ const WorkerLogin = ({ onLogin }) => {
             alert("Please enter Worker ID!");
             return;
         }
-
+    
         setLoading(true);
         try {
             const response = await fetch(`http://localhost:8080/api/workers/login`, {
@@ -21,20 +21,23 @@ const WorkerLogin = ({ onLogin }) => {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ workerId })
             });
-
+    
             if (!response.ok) {
                 const errorData = await response.json();
                 throw new Error(errorData.message || 'Failed to login');
             }
-
+    
             const data = await response.json();
-
+    
             if (data && data.workerId) {
-                onLogin({ ...data, type: "worker" , workerId}); // Call onLogin to update state in App.js
-                navigate('/worker-home', {
-                    state: { workerId }
-                  });
-                  // Redirect to worker home after login
+                onLogin({ 
+                    ...data, 
+                    type: "worker", 
+                    workerId, 
+                    workerName: data.name || "Worker"  // Ensure worker's name is stored
+                });
+    
+                navigate('/worker-home', { state: { workerId } });
             } else {
                 throw new Error('Worker not found or invalid response');
             }
@@ -45,6 +48,7 @@ const WorkerLogin = ({ onLogin }) => {
             setLoading(false);
         }
     };
+    
 
     return (
         <div className="container py-5">

@@ -1,12 +1,43 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Navbar, Nav, Dropdown, Container } from 'react-bootstrap';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { Avatar } from "@mui/material";
 import './CustomNavbar.css';
 
 const CustomNavbar = ({ isAuthenticated, user, homeRoute, profileSliderOpen, setProfileSliderOpen, handleLogout }) => {
   const sliderRef = useRef(null);
   const profileButtonRef = useRef(null);
+  const location = useLocation();
+  const [pageTitle, setPageTitle] = useState("Home"); // Default title
+
+  // Function to get the correct user name
+  const getUserName = () => {
+    if (!user) return "User";
+    return user.workerName || user.ngoName || user.providerName || user.name || "User";
+  };
+
+  // Get the first character for the avatar
+  const getAvatarInitial = () => {
+    return getUserName().charAt(0).toUpperCase();
+  };
+
+  // Function to update the page title based on the path
+  useEffect(() => {
+    const pathTitleMap = {
+      "/": "Home",
+      "/ngohome": "NGO Dashboard",
+      "/worker-home": "My Profile",
+      "/jobproviderhome": "Job Provider Dashboard",
+      "/add-worker": "Add Worker",
+      "/search-worker": "Search Worker",
+      "/job-request": "Job Requests",
+      "/jobproviderform": "Post Job",
+      "/contact": "Contact",
+      "/about": "About Us",
+    };
+    
+    setPageTitle(pathTitleMap[location.pathname] || "Home");
+  }, [location.pathname]);
 
   useEffect(() => {
     function handleClickOutside(event) {
@@ -30,75 +61,37 @@ const CustomNavbar = ({ isAuthenticated, user, homeRoute, profileSliderOpen, set
       <Navbar bg="light" expand="lg" className="custom-navbar shadow-sm">
         <Container fluid className="px-3">
           <Navbar.Brand as={Link} to={homeRoute} className="logo py-2">
-            <img
-              src="/Images/NirmanLogo.png"
-              alt="Logo"
-              height="60"
-              className="d-inline-block align-top"
-            />
+            <img src="/Images/NirmanLogo.png" alt="Logo" height="60" />
           </Navbar.Brand>
 
-          <Navbar.Toggle aria-controls="responsive-navbar-nav" className="border-0 shadow-none" />
+          <Navbar.Toggle aria-controls="responsive-navbar-nav" />
 
           <Navbar.Collapse id="responsive-navbar-nav" className="justify-content-center">
             <Nav className="mx-auto text-center">
-              <Nav.Link as={Link} to={homeRoute} className="px-4">
-                Home
-              </Nav.Link>
-
-              {(!isAuthenticated || (user?.type !== "ngo" && user?.type !== "provider" && user?.type !== "worker")) && (
+              <Nav.Link as={Link} to={homeRoute}>{pageTitle}</Nav.Link>
+              {!isAuthenticated && (
                 <>
-                  <Nav.Link as={Link} to="/contact" className="px-4">
-                    Contact
-                  </Nav.Link>
-                  <Nav.Link as={Link} to="/about" className="px-4">
-                    About Us
-                  </Nav.Link>
+                  <Nav.Link as={Link} to="/contact">Contact</Nav.Link>
+                  <Nav.Link as={Link} to="/about">About Us</Nav.Link>
                 </>
               )}
-
-              {isAuthenticated && user?.type === "ngo" && (
-                <>
-                  <Nav.Link as={Link} to="/add-worker" className="px-4">
-                    Add Worker
-                  </Nav.Link>
-                  <Nav.Link as={Link} to="/search-worker" className="px-4">
-                    Search Worker
-                  </Nav.Link>
-                  <Nav.Link as={Link} to="/job-request" className="px-4">
-                    Job Request
-                  </Nav.Link>
-                </>
-              )}
-
-              {isAuthenticated && user?.type === "provider" && (
-                <Nav.Link as={Link} to="/jobproviderform" className="px-4">
-                  Job Request Form
-                </Nav.Link>
-              )}
-
-              {/* Worker specific navbar items removed as requested */}
             </Nav>
-           
-            <Nav className="d-flex align-items-center justify-content-center">
+
+            <Nav className="d-flex align-items-center">
               {!isAuthenticated ? (
-                <div className="d-flex gap-2 flex-column flex-lg-row align-items-center">
-                  <Dropdown className="w-100 w-lg-auto">
-                    <Dropdown.Toggle variant="light" className="nav-dropdown w-100">
-                      Login
-                    </Dropdown.Toggle>
-                    <Dropdown.Menu className="w-100">
+                <div className="d-flex gap-2">
+                  <Dropdown>
+                    <Dropdown.Toggle variant="light">Login</Dropdown.Toggle>
+                    <Dropdown.Menu>
                       <Dropdown.Item as={Link} to="/login/ngo">As NGO</Dropdown.Item>
                       <Dropdown.Item as={Link} to="/login/provider">As Job Provider</Dropdown.Item>
                       <Dropdown.Item as={Link} to="/login/worker">As Worker</Dropdown.Item>
                     </Dropdown.Menu>
                   </Dropdown>
 
-                  <Dropdown className="w-100 w-lg-auto">
-                    <Dropdown.Toggle variant="light" className="nav-dropdown w-100">
-                      Signup
-                    </Dropdown.Toggle>
-                    <Dropdown.Menu className="w-100">
+                  <Dropdown>
+                    <Dropdown.Toggle variant="light">Signup</Dropdown.Toggle>
+                    <Dropdown.Menu>
                       <Dropdown.Item as={Link} to="/signup/ngo">As NGO</Dropdown.Item>
                       <Dropdown.Item as={Link} to="/signup/provider">As Job Provider</Dropdown.Item>
                       <Dropdown.Item as={Link} to="/signup/worker">As Worker</Dropdown.Item>
@@ -107,31 +100,15 @@ const CustomNavbar = ({ isAuthenticated, user, homeRoute, profileSliderOpen, set
                 </div>
               ) : (
                 <div className="profile-container d-flex align-items-center gap-2">
-                  <span className="fw-bold d-none d-lg-inline">
-                    {user?.name}
-                  </span>
-                  <div className="d-flex align-items-center">
-                    <button 
-                      className="btn btn-danger me-2"
-                      onClick={handleLogout}
-                    >
-                      Logout
-                    </button>
-                    <Avatar
-                      ref={profileButtonRef}
-                      src={user?.profileImage || undefined}
-                      sx={{
-                        width: 45,
-                        height: 45,
-                        bgcolor: "#007bff",
-                        cursor: "pointer",
-                        fontSize: "1rem"
-                      }}
-                      onClick={() => setProfileSliderOpen(!profileSliderOpen)}
-                    >
-                      {user?.name ? user.name.charAt(0).toUpperCase() : "U"}
-                    </Avatar>
-                  </div>
+                  <span className="fw-bold d-none d-lg-inline">{getUserName()}</span>
+                  <Avatar
+                    ref={profileButtonRef}
+                    src={user?.profileImage || undefined}
+                    sx={{ width: 45, height: 45, bgcolor: "#007bff", cursor: "pointer" }}
+                    onClick={() => setProfileSliderOpen(!profileSliderOpen)}
+                  >
+                    {getAvatarInitial()}
+                  </Avatar>
                 </div>
               )}
             </Nav>
@@ -139,14 +116,41 @@ const CustomNavbar = ({ isAuthenticated, user, homeRoute, profileSliderOpen, set
         </Container>
       </Navbar>
 
-      <div ref={sliderRef} className={`profile-slider ${profileSliderOpen ? 'open' : ''}`}>
-        <div className="p-4">
-          <h4 className="mb-4">{user?.name}'s Profile</h4>
-          <button className="btn btn-danger w-100" onClick={handleLogout}>
-            Logout
-          </button>
+      {isAuthenticated && (
+        <div ref={sliderRef} className={`profile-slider ${profileSliderOpen ? 'open' : ''}`}>
+          <div className="p-4">
+            <div className="text-center mb-4">
+              <Avatar
+                src={user?.profileImage || undefined}
+                sx={{ width: 80, height: 80, bgcolor: "#007bff", fontSize: "1.5rem", margin: "0 auto 16px auto" }}
+              >
+                {getAvatarInitial()}
+              </Avatar>
+              <h4 className="mb-1">{getUserName()}</h4>
+              <p className="text-muted">{user?.type?.toUpperCase()}</p>
+            </div>
+
+            <div className="d-flex flex-column gap-2">
+              {user?.type === "worker" && <Link to="/worker-home" className="btn btn-outline-primary w-100">My Profile</Link>}
+              {user?.type === "ngo" && (
+                <>
+                  <Link to="/ngohome" className="btn btn-outline-primary w-100">Dashboard</Link>
+                  <Link to="/add-worker" className="btn btn-outline-primary w-100">Add Worker</Link>
+                  <Link to="/search-worker" className="btn btn-outline-primary w-100">Search Worker</Link>
+                  <Link to="/job-request" className="btn btn-outline-primary w-100">Job Requests</Link>
+                </>
+              )}
+              {user?.type === "provider" && (
+                <>
+                  <Link to="/jobproviderhome" className="btn btn-outline-primary w-100">Dashboard</Link>
+                  <Link to="/jobproviderform" className="btn btn-outline-primary w-100">Post Job</Link>
+                </>
+              )}
+              <button className="btn btn-danger w-100 mt-3" onClick={handleLogout}>Logout</button>
+            </div>
+          </div>
         </div>
-      </div>
+      )}
     </>
   );
 };

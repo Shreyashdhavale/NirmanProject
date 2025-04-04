@@ -1,4 +1,4 @@
-import React, { useState, createContext } from 'react';
+import React, { useState, useEffect, createContext } from 'react';
 import { BrowserRouter as Router, Routes, Route, useNavigate, Navigate } from 'react-router-dom';
 import CustomNavbar from './pages/CustomNavbar.jsx';
 import NGOLogin from './components/NGO/NGOPages/LoginNGO.jsx';
@@ -24,6 +24,15 @@ const App = () => {
   const [user, setUser] = useState(null);
   const [profileSliderOpen, setProfileSliderOpen] = useState(false);
 
+  // Load user from localStorage on page refresh
+  useEffect(() => {
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) {
+      setUser(JSON.parse(storedUser));
+      setIsAuthenticated(true);
+    }
+  }, []);
+
   return (
     <UserContext.Provider value={{ user, isAuthenticated }}>
       <Router>
@@ -44,8 +53,11 @@ const AppRoutes = ({ isAuthenticated, setIsAuthenticated, user, setUser, profile
   const navigate = useNavigate();
 
   const handleLogin = (userData) => {
+    console.log("User logged in:", userData); // Debugging Log
     setIsAuthenticated(true);
     setUser(userData);
+    localStorage.setItem("user", JSON.stringify(userData)); // Persist user in localStorage
+
     if (userData.type === 'ngo') {
       navigate('/ngohome');
     } else if (userData.type === 'provider') {
@@ -59,35 +71,9 @@ const AppRoutes = ({ isAuthenticated, setIsAuthenticated, user, setUser, profile
     setIsAuthenticated(false);
     setUser(null);
     setProfileSliderOpen(false);
+    localStorage.removeItem("user"); // Remove user from localStorage
     navigate('/');
     alert('You have been logged out.');
-  };
-
-  const handleSaveProfile = async (updatedData) => {
-    try {
-      const isFormData = updatedData instanceof FormData;
-      
-      const response = await fetch(`http://localhost:8080/api/workers/${user.workerId}`, {
-        method: 'PUT',
-        body: isFormData ? updatedData : JSON.stringify(updatedData),
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-          ...(isFormData ? {} : { 'Content-Type': 'application/json' })
-        }
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to save profile');
-      }
-
-      const savedData = await response.json();
-      setUser(prev => ({ ...prev, ...savedData }));
-      return savedData;
-    } catch (error) {
-      console.error('Error saving profile:', error);
-      throw error;
-    }
   };
 
   const homeRoute = isAuthenticated
@@ -120,54 +106,15 @@ const AppRoutes = ({ isAuthenticated, setIsAuthenticated, user, setUser, profile
         <Route path="/signup/ngo" element={<NGOSignup onSignup={handleLogin} />} />
         <Route path="/signup/provider" element={<ProviderSignup onSignup={handleLogin} />} />
       
-        <Route 
-          path="/ngohome" 
-          element={isAuthenticated && user?.type === 'ngo' ? 
-            <NGOHome /> : 
-            <Navigate to="/login/ngo" />} 
-        />
-        <Route 
-          path="/add-worker" 
-          element={isAuthenticated && user?.type === 'ngo' ? 
-            <AddWorker /> : 
-            <Navigate to="/login/ngo" />} 
-        />
-        <Route 
-          path="/search-worker" 
-          element={isAuthenticated && user?.type === 'ngo' ? 
-            <WorkerSearch /> : 
-            <Navigate to="/login/ngo" />} 
-        />
-        <Route 
-          path="/job-request" 
-          element={isAuthenticated && user?.type === 'ngo' ? 
-            <JobRequest /> : 
-            <Navigate to="/login/ngo" />} 
-        />
+        <Route path="/ngohome" element={isAuthenticated && user?.type === 'ngo' ? <NGOHome /> : <Navigate to="/login/ngo" />} />
+        <Route path="/add-worker" element={isAuthenticated && user?.type === 'ngo' ? <AddWorker /> : <Navigate to="/login/ngo" />} />
+        <Route path="/search-worker" element={isAuthenticated && user?.type === 'ngo' ? <WorkerSearch /> : <Navigate to="/login/ngo" />} />
+        <Route path="/job-request" element={isAuthenticated && user?.type === 'ngo' ? <JobRequest /> : <Navigate to="/login/ngo" />} />
         
-        <Route 
-          path="/jobproviderhome" 
-          element={isAuthenticated && user?.type === 'provider' ? 
-            <JobProviderHome user={user}/> : 
-            <Navigate to="/login/provider" />} 
-        />
-        <Route 
-          path="/jobproviderform" 
-          element={isAuthenticated && user?.type === 'provider' ? 
-            <JobProviderForm user={user} /> : 
-            <Navigate to="/login/provider" />} 
-        />
+        <Route path="/jobproviderhome" element={isAuthenticated && user?.type === 'provider' ? <JobProviderHome user={user}/> : <Navigate to="/login/provider" />} />
+        <Route path="/jobproviderform" element={isAuthenticated && user?.type === 'provider' ? <JobProviderForm user={user} /> : <Navigate to="/login/provider" />} />
         
-        <Route 
-          path="/worker-home" 
-          element={isAuthenticated && user?.type === 'worker' ? 
-            <WorkerHome 
-              workerData={user} 
-              handleLogout={handleLogout}
-              handleSaveProfile={handleSaveProfile}
-            /> : 
-            <Navigate to="/login/worker" />} 
-        />
+        <Route path="/worker-home" element={isAuthenticated && user?.type === 'worker' ? <WorkerHome workerData={user} handleLogout={handleLogout} /> : <Navigate to="/login/worker" />} />
 
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
