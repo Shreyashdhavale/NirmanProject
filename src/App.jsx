@@ -16,6 +16,7 @@ import WorkerSearch from './components/NGO/NGOPages/WorkerSearch.jsx';
 import JobRequest from './components/NGO/NGOPages/JobRequest.jsx';
 import WorkerLogin from './components/Worker/WorkerLogin.jsx';
 import WorkerHome from './components/Worker/Workerhome.jsx';
+import DeleteJobsPage from './components/JobProvider/DeleteJobsPage.jsx';
 
 export const UserContext = createContext(null);
 
@@ -73,15 +74,15 @@ const AppRoutes = ({ isAuthenticated, setIsAuthenticated, user, setUser, profile
     setProfileSliderOpen(false);
     localStorage.removeItem("user"); // Remove user from localStorage
     navigate('/');
-    alert('You have been logged out.');
+   
   };
 
   const homeRoute = isAuthenticated
     ? user?.type === 'ngo'
       ? '/ngohome'
       : user?.type === 'provider'
-      ? '/jobproviderhome'
-      : '/worker-home'
+        ? '/jobproviderhome'
+        : '/worker-home'
     : '/';
 
   return (
@@ -99,22 +100,24 @@ const AppRoutes = ({ isAuthenticated, setIsAuthenticated, user, setUser, profile
         <Route path="/" element={<Home />} />
         <Route path="/contact" element={<Contact />} />
         <Route path="/about" element={<About />} />
-        
+
         <Route path="/login/ngo" element={<NGOLogin onLogin={handleLogin} />} />
         <Route path="/login/provider" element={<LoginProvider onLogin={handleLogin} />} />
         <Route path="/login/worker" element={<WorkerLogin onLogin={handleLogin} />} />
         <Route path="/signup/ngo" element={<NGOSignup onSignup={handleLogin} />} />
         <Route path="/signup/provider" element={<ProviderSignup onSignup={handleLogin} />} />
-      
+
         <Route path="/ngohome" element={isAuthenticated && user?.type === 'ngo' ? <NGOHome /> : <Navigate to="/login/ngo" />} />
         <Route path="/add-worker" element={isAuthenticated && user?.type === 'ngo' ? <AddWorker /> : <Navigate to="/login/ngo" />} />
         <Route path="/search-worker" element={isAuthenticated && user?.type === 'ngo' ? <WorkerSearch /> : <Navigate to="/login/ngo" />} />
         <Route path="/job-request" element={isAuthenticated && user?.type === 'ngo' ? <JobRequest /> : <Navigate to="/login/ngo" />} />
-        
-        <Route path="/jobproviderhome" element={isAuthenticated && user?.type === 'provider' ? <JobProviderHome user={user}/> : <Navigate to="/login/provider" />} />
+
+        <Route path="/jobproviderhome" element={isAuthenticated && user?.type === 'provider' ? <JobProviderHome user={user} /> : <Navigate to="/login/provider" />} />
         <Route path="/jobproviderform" element={isAuthenticated && user?.type === 'provider' ? <JobProviderForm user={user} /> : <Navigate to="/login/provider" />} />
+        <Route path="/delete-jobs"  element={isAuthenticated && user?.type === 'provider' ? (<DeleteJobsPage user={user} />) : ( <Navigate to="/login/provider" /> ) }/>
         
         <Route path="/worker-home" element={isAuthenticated && user?.type === 'worker' ? <WorkerHome workerData={user} handleLogout={handleLogout} /> : <Navigate to="/login/worker" />} />
+       
 
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>

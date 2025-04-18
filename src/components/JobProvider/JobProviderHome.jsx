@@ -3,7 +3,7 @@ import axios from "axios";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faBriefcase } from "@fortawesome/free-solid-svg-icons";
 import { AlertCircle, Calendar, MapPin, Clock, Users, DollarSign, FileText } from "lucide-react";
-import { Alert, Card, Modal, Button, Row, Col, Badge, Container } from "react-bootstrap";
+import { Alert, Card, Modal, Button, Row, Col, Badge, Container, Toast, ToastContainer } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import "./JobProviderHome.css";
 
@@ -13,28 +13,32 @@ const JobProviderHome = ({ user }) => {
   const [selectedJob, setSelectedJob] = useState(null);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
-  
-  const navigate = useNavigate();
+  const [toastMessage, setToastMessage] = useState("");
+  const [showToast, setShowToast] = useState(false);
 
-  // Use the user's name or fallback
+  const navigate = useNavigate();
   const userName = user?.name || "Provider";
+
+  const triggerToast = (message) => {
+    setToastMessage(message);
+    setShowToast(true);
+  };
 
   useEffect(() => {
     if (user?.jobProviderId) {
-      console.log("Job Provider ID:", user.jobProviderId);
       setLoading(true);
-
       axios
         .get(`http://localhost:8080/api/jobs?jobProviderId=${user.jobProviderId}`)
         .then((response) => {
-          console.log("API Response:", response.data);
           setActiveJobs(response.data || []);
+          triggerToast("Job postings loaded successfully.");
           setError(null);
-          setLoading(false);
         })
         .catch((err) => {
           console.error("Error fetching jobs:", err);
           setError("Failed to load job postings. Please try again later.");
+        })
+        .finally(() => {
           setLoading(false);
         });
     } else {
@@ -74,7 +78,11 @@ const JobProviderHome = ({ user }) => {
     if (!dateString) return "Not specified";
     try {
       const date = new Date(dateString);
-      return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+      return date.toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+      });
     } catch {
       return dateString;
     }
@@ -176,11 +184,21 @@ const JobProviderHome = ({ user }) => {
         </Modal.Footer>
       </Modal>
 
-      <Row className="quick-actions">
+      <Row className="quick-actions mt-4">
         <Col>
           <Button variant="primary" onClick={handleCreateJob}>Post New Job</Button>
         </Col>
       </Row>
+
+      {/* Toast Container */}
+      <ToastContainer position="bottom-end" className="p-3">
+        <Toast bg="success" show={showToast} onClose={() => setShowToast(false)} delay={3000} autohide>
+          <Toast.Header>
+            <strong className="me-auto">Job Provider</strong>
+          </Toast.Header>
+          <Toast.Body className="text-dark">{toastMessage}</Toast.Body>
+        </Toast>
+      </ToastContainer>
     </Container>
   );
 };

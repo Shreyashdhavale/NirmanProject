@@ -19,9 +19,10 @@ const JobRequest = () => {
   const [showConfirmationModal, setShowConfirmationModal] = useState(false);
   const [selectedWorker, setSelectedWorker] = useState(null);
   const [notification, setNotification] = useState(null);
-  const [selectedEmployer, setSelectedEmployer] = useState(null);
-  const [loadingEmployer, setLoadingEmployer] = useState(false);
-  const [employerError, setEmployerError] = useState(null);
+  const [showRemoveConfirmationModal, setShowRemoveConfirmationModal] = useState(false);
+  const [requestToRemoveWorker, setRequestToRemoveWorker] = useState(null);
+  const [workerIdToRemove, setWorkerIdToRemove] = useState(null);
+  const [showingWorkersForJob, setShowingWorkersForJob] = useState(null);
   
   // API base URL
   const API_BASE_URL = 'http://localhost:8080/api';
@@ -46,22 +47,7 @@ const JobRequest = () => {
     fetchJobRequests();
   }, []);
 
-  // Fetch employer details
-  const fetchEmployerDetails = async (employerId) => {
-    try {
-      setLoadingEmployer(true);
-      setEmployerError(null);
-      
-      const response = await axios.get(`${API_BASE_URL}/employers/${employerId}`);
-      setSelectedEmployer(response.data);
-      
-      setLoadingEmployer(false);
-    } catch (error) {
-      console.error("Error fetching employer details:", error);
-      setEmployerError("Failed to load employer details.");
-      setLoadingEmployer(false);
-    }
-  };
+
 
   // Fetch workers from API
   const fetchWorkers = async () => {
@@ -154,6 +140,15 @@ const JobRequest = () => {
     setSortBy(e.target.value);
   };
 
+  // Toggle worker display for a specific job
+  const toggleWorkerDisplay = (jobRequestId) => {
+    if (showingWorkersForJob === jobRequestId) {
+      setShowingWorkersForJob(null); // Hide if already showing
+    } else {
+      setShowingWorkersForJob(jobRequestId); // Show if not already showing
+    }
+  };
+
   // Open assign modal for a specific job request
   const handleAssignClick = (request) => {
     setSelectedRequest(request);
@@ -176,30 +171,117 @@ const JobRequest = () => {
     setShowConfirmationModal(true);
   };
   
+  
+  // Updated function to accept both job request and worker ID
+  const handleRemoveWorkerClick = (request, workerId) => {
+    setRequestToRemoveWorker(request);
+    setWorkerIdToRemove(workerId);
+    setShowRemoveConfirmationModal(true);
+  };
+
+  // Updated confirmation handler for removing worker
+  const handleConfirmRemoveWorker = async () => {
+    if (!requestToRemoveWorker || !workerIdToRemove) {
+      console.error("No job request or worker selected for removal.");
+      return;
+    }
+    
+    try {
+      // Make API call with both required parameters
+      await axios.post(`${API_BASE_URL}/jobs/cancel-worker`, {
+        jobId: requestToRemoveWorker.jobRequestId,
+        workerId: workerIdToRemove
+      });
+      
+      // Update local state with the updated job request
+      const updatedRequests = jobRequests.map(req => {
+        if (req.jobRequestId === requestToRemoveWorker.jobRequestId) {
+          // Remove the specific worker ID from the assigned workers array
+          const updatedWorkerIds = req.assignedWorkerIds.filter(id => id !== workerIdToRemove);
+          
+          // Determine new status based on remaining workers
+          const newStatus = updatedWorkerIds.length > 0 ? 'Assigned' : 'Pending';
+          
+          return {
+            ...req,
+            assignedWorkerIds: updatedWorkerIds,
+            workerAssignedStatus: newStatus
+          };
+        }
+        return req;
+      });
+      
+      setJobRequests(updatedRequests);
+      setNotification({
+        type: 'success',
+        message: `Worker has been removed from "${requestToRemoveWorker.jobTitle}".`
+      });
+      
+      // Close modal and reset selections
+      setShowRemoveConfirmationModal(false);
+      setRequestToRemoveWorker(null);
+      setWorkerIdToRemove(null);
+    } catch (err) {
+      console.error('Error removing worker assignment:', err.response?.data || err.message || err);
+      setNotification({
+        type: 'danger',
+        message: `Failed to remove worker assignment: ${err.response?.data?.message || err.message || 'Please try again'}`
+      });
+    }
+  };
 
   // Confirm worker assignment and update the job request in the database - UPDATED
   const handleConfirmAssignment = async () => {
+    if (!selectedWorker || !selectedRequest) {
+      console.error("Worker or request not selected.");
+      return;
+    }
+    console.log('✅ handleConfirmAssignment triggered');
+  
+    // Check for missing data
+    if (!selectedRequest) {
+      console.error('❌ selectedRequest is null or undefined');
+      return;
+    }
+    if (!selectedWorker) {
+      console.error('❌ selectedWorker is null or undefined');
+      return;
+    }
+  
+    console.log('Assigning worker...', {
+      jobId: selectedRequest.jobRequestId,
+      workerId: selectedWorker.workerId
+    });
+  
     try {
       // API call to assign worker to the job request.
       await axios.post(
-        `${API_BASE_URL}/jobs/${selectedRequest.jobRequestId}/assign-workers`,
-        [selectedWorker.workerId]
+        `${API_BASE_URL}/jobs/assign-worker`,
+        {
+          jobId: selectedRequest.jobRequestId,
+          workerId: selectedWorker.workerId
+        }
       );
   
       // Update job request locally
       const updatedRequests = jobRequests.map(req => {
         if (req.jobRequestId === selectedRequest.jobRequestId) {
-          // Initialize assignedWorkers if not already set
           let assignedWorkers = req.assignedWorkerIds ? [...req.assignedWorkerIds] : [];
-          // Add the new worker if not already assigned
+  
           if (!assignedWorkers.includes(selectedWorker.workerId)) {
             assignedWorkers.push(selectedWorker.workerId);
           }
-          // Only change status to "Assigned" if the required number of workers is met
-          const updatedStatus = (assignedWorkers.length >= req.numOfWorkers)
-            ? 'Assigned'
-            : req.workerAssignedStatus; // Maintain current status if not all workers assigned
-          return { ...req, assignedWorkerIds: assignedWorkers, workerAssignedStatus: updatedStatus };
+  
+          const updatedStatus =
+            assignedWorkers.length >= req.numOfWorkers
+              ? 'Assigned'
+              : req.workerAssignedStatus;
+  
+          return {
+            ...req,
+            assignedWorkerIds: assignedWorkers,
+            workerAssignedStatus: updatedStatus
+          };
         }
         return req;
       });
@@ -207,37 +289,31 @@ const JobRequest = () => {
       setJobRequests(updatedRequests);
       setNotification({
         type: 'success',
-        message: `Worker ${selectedWorker.fullName} has been added to ${selectedRequest.jobTitle}.` +
-                 ` ${selectedRequest.numOfWorkers - (selectedRequest.assignedWorkerIds ? selectedRequest.assignedWorkerIds.length + 1 : 1)} more worker(s) required.`
+        message: `Worker ${selectedWorker.fullName} has been added to ${selectedRequest.jobTitle}. ` +
+          `${selectedRequest.numOfWorkers - (selectedRequest.assignedWorkerIds ? selectedRequest.assignedWorkerIds.length + 1 : 1)} more worker(s) required.`
       });
   
-      // Close modals and reset selected items
+      // Close modals and reset selections
       setShowConfirmationModal(false);
       setShowAssignModal(false);
       setSelectedWorker(null);
       setSelectedRequest(null);
       setWorkerSearchTerm('');
     } catch (err) {
-      console.error('Error assigning worker:', err);
+      console.error('❌ Error assigning worker:', err);
       setNotification({
         type: 'danger',
         message: 'Failed to assign worker. Please try again.'
       });
     }
   };
-
+  
   // Close assign modal
   const handleCloseAssignModal = () => {
     setShowAssignModal(false);
     setSelectedRequest(null);
     setWorkerSearchTerm('');
     setFilteredWorkers([]);
-  };
-
-  // Close confirmation modal
-  const handleCloseConfirmationModal = () => {
-    setShowConfirmationModal(false);
-    setSelectedWorker(null);
   };
 
   // Clear notification after 5 seconds
@@ -296,8 +372,8 @@ const JobRequest = () => {
                 request.workerAssignedStatus === 'Assigned' ? 'border-success' : 
                 request.workerAssignedStatus === 'Completed' ? 'border-info' : 
                 'border-warning'}`}>
-                <div className="card-header d-flex justify-content-between align-items-center">
-                  <h5 className="card-title mb-0">{request.jobTitle}</h5>
+                <div className="card-header d-flex  justify-content-between align-items-center ">
+                  <h5 className="card-title mb-0 text-dark">{request.jobTitle}</h5>
                   <span className={`badge ${
                     request.workerAssignedStatus === 'Assigned' ? 'bg-success' : 
                     request.workerAssignedStatus === 'Completed' ? 'bg-info' : 
@@ -306,68 +382,56 @@ const JobRequest = () => {
                   </span>
                 </div>
                 <div className="card-body">
-                  <div className="mb-3"><strong>Employer:</strong> {request.contactPerson}</div>
+                  <div className="mb-3"><strong>Contact Person:</strong> {request.contactPerson}</div>
                   <div className="mb-3"><strong>Location:</strong> {request.workLocation}</div>
                   <div className="mb-3"><strong>Skills Required:</strong> {request.skillRequired}</div>
                   <div className="mb-3"><strong>Workers Needed:</strong> {request.numOfWorkers}</div>
                   <div className="mb-3"><strong>Duration:</strong> {formatDate(request.startDate)} to {formatDate(request.endDate)}</div>
                   <div className="mb-3"><strong>Daily Wage:</strong> ₹{request.wagePerDay}</div>
-                  <p className="card-text job-description-preview">{request.jobDescription}</p>
+                  <p className="card-text job-description-preview"><strong>Description:</strong> {request.jobDescription}</p>
                 </div>
-                <div className="card-footer d-flex justify-content-between">
-                  {/* View Employer Details Button */}
-                  <button 
-                    className="btn btn-outline-primary"
-                    onClick={() => fetchEmployerDetails(request.jobProviderId)}
-                    data-bs-toggle="modal"
-                    data-bs-target="#employerDetailsModal"
-                  > 
-                    View Details
-                  </button>
-    
-                  <button 
-                    className="btn btn-primary"
-                    onClick={() => handleAssignClick(request)}
-                    disabled={request.workerAssignedStatus === 'Completed'}
-                  >
-                    {request.workerAssignedStatus === 'Assigned' ? 'Reassign' : 'Assign Workers'}
-                  </button>
+                <div className="card-footer">
+                  <div className="d-flex justify-content-between mb-2">
+                    <button 
+                      className="btn btn-primary"
+                      onClick={() => handleAssignClick(request)}
+                      disabled={request.workerAssignedStatus === 'Completed'}
+                    >
+                      {request.workerAssignedStatus === 'Assigned' ? 'Assign More' : 'Assign Workers'}
+                    </button>
+                    
+                    <button 
+                      className="btn btn-outline-danger"
+                      onClick={() => toggleWorkerDisplay(request.jobRequestId)}
+                      disabled={!request.assignedWorkerIds || request.assignedWorkerIds.length === 0}
+                    >
+                      {showingWorkersForJob === request.jobRequestId ? 'Hide Workers' : 'Show & Remove Workers'}
+                    </button>
+                  </div>
+                  
+                  {/* Show workers list only when toggled for this specific job */}
+                  {showingWorkersForJob === request.jobRequestId && request.assignedWorkerIds && request.assignedWorkerIds.length > 0 && (
+                    <div className="mt-3 p-2 border rounded bg-light">
+                      <h6 className="mb-2">Assigned Workers:</h6>
+                      <ul className="list-group">
+                        {request.assignedWorkerIds.map(workerId => (
+                          <li key={workerId} className="list-group-item d-flex justify-content-between align-items-center">
+                            Worker ID: {workerId}
+                            <button 
+                              className="btn btn-sm btn-danger"
+                              onClick={() => handleRemoveWorkerClick(request, workerId)}
+                            >
+                              Remove
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
           ))}
-        </div>
-    
-        {/* Employer Details Modal */}
-        <div className="modal fade" id="employerDetailsModal" tabIndex="-1" aria-labelledby="employerDetailsModalLabel" aria-hidden="true">
-          <div className="modal-dialog">
-            <div className="modal-content">
-              <div className="modal-header">
-                <h5 className="modal-title" id="employerDetailsModalLabel">Employer Details</h5>
-                <button type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-              </div>
-              <div className="modal-body">
-                {loadingEmployer ? (
-                  <p>Loading employer details...</p>
-                ) : employerError ? (
-                  <p className="text-danger">{employerError}</p>
-                ) : selectedEmployer ? (
-                  <div>
-                    <p><strong>Name:</strong> {selectedEmployer.name}</p>
-                    <p><strong>Email:</strong> {selectedEmployer.email}</p>
-                    <p><strong>Phone:</strong> {selectedEmployer.phone}</p>
-                    <p><strong>Company:</strong> {selectedEmployer.companyName}</p>
-                    <p><strong>Address:</strong> {selectedEmployer.address}</p>
-                  </div>
-                ) : (
-                  <p>No employer details available.</p>
-                )}
-              </div>
-              <div className="modal-footer">
-                <button type="button" className="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-              </div>
-            </div>
-          </div>
         </div>
       </>
     );
@@ -397,14 +461,14 @@ const JobRequest = () => {
                 <strong>Skill Level:</strong> {worker.skillLevel} 
               </p>
               <p className="card-text">
-                <strong>Availability:</strong> {worker.availability === "true" ? 'Available' : 'Busy'}
+              <strong>Availability:</strong> {worker.availability ? 'Available' : 'Busy'}
               </p>
             </div>
             <div className="card-footer">
               <button 
                 className="btn btn-success w-100"
                 onClick={() => handleSelectWorker(worker)}
-                disabled={worker.availability !== "true"}
+                disabled={!worker.availability}
               >
                 Select
               </button>
@@ -462,7 +526,7 @@ const JobRequest = () => {
             <option value="all">All Statuses</option>
             <option value="pending">Pending</option>
             <option value="assigned">Assigned</option>
-            <option value="completed">Completed</option>
+           
           </select>
         </div>
         <div className="col-md-4">
@@ -524,26 +588,64 @@ const JobRequest = () => {
         </div>
       )}
 
-      {/* Confirmation Modal */}
-      {showConfirmationModal && selectedWorker && selectedRequest && (
+      {/* Confirmation Modal for Assigning Worker */}
+      {showConfirmationModal && (
         <div className="modal fade show" style={{display: 'block', backgroundColor: 'rgba(0,0,0,0.5)'}} tabIndex="-1">
           <div className="modal-dialog modal-dialog-centered">
             <div className="modal-content">
-              <div className="modal-header bg-success text-white">
+              <div className="modal-header">
                 <h5 className="modal-title">Confirm Assignment</h5>
-                <button type="button" className="btn-close btn-close-white" onClick={handleCloseConfirmationModal}></button>
+                <button type="button" className="btn-close" onClick={() => setShowConfirmationModal(false)}></button>
               </div>
               <div className="modal-body">
                 <p>
-                  Are you sure you want to assign <strong>{selectedWorker.fullName}</strong> to the job <strong>{selectedRequest.jobTitle}</strong>?
+                  Are you sure you want to assign{' '}
+                  <strong>{selectedWorker?.fullName}</strong> to the job{' '}
+                  <strong>{selectedRequest?.jobTitle}</strong>?
                 </p>
               </div>
               <div className="modal-footer">
-                <button type="button" className="btn btn-secondary" onClick={handleCloseConfirmationModal}>
+                <button type="button" className="btn btn-secondary" onClick={() => setShowConfirmationModal(false)}>
                   Cancel
                 </button>
-                <button type="button" className="btn btn-success" onClick={handleConfirmAssignment}>
-                  Confirm Assignment
+                <button type="button" className="btn btn-primary" onClick={handleConfirmAssignment}>
+                  Confirm
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Confirmation Modal for Removing Worker Assignment */}
+      {showRemoveConfirmationModal && (
+        <div className="modal fade show" style={{display: 'block', backgroundColor: 'rgba(0,0,0,0.5)'}} tabIndex="-1">
+          <div className="modal-dialog modal-dialog-centered">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">Confirm Remove Assignment</h5>
+                <button type="button" className="btn-close" onClick={() => setShowRemoveConfirmationModal(false)}></button>
+              </div>
+              <div className="modal-body">
+                <p>
+                  Are you sure you want to remove worker {workerIdToRemove} from{' '}
+                  <strong>{requestToRemoveWorker?.jobTitle}</strong>?
+                </p>
+              </div>
+              <div className="modal-footer">
+                <button 
+                  type="button" 
+                  className="btn btn-secondary" 
+                  onClick={() => setShowRemoveConfirmationModal(false)}
+                >
+                  Cancel
+                </button>
+                <button 
+                  type="button" 
+                  className="btn btn-danger" 
+                  onClick={handleConfirmRemoveWorker}
+                >
+                  Remove Assignment
                 </button>
               </div>
             </div>

@@ -83,18 +83,18 @@ const CustomNavbar = ({ isAuthenticated, user, homeRoute, profileSliderOpen, set
                   <Dropdown>
                     <Dropdown.Toggle variant="light">Login</Dropdown.Toggle>
                     <Dropdown.Menu>
-                      <Dropdown.Item as={Link} to="/login/ngo">As NGO</Dropdown.Item>
-                      <Dropdown.Item as={Link} to="/login/provider">As Job Provider</Dropdown.Item>
-                      <Dropdown.Item as={Link} to="/login/worker">As Worker</Dropdown.Item>
+                      <Dropdown.Item as={Link} to="/login/ngo">NGO</Dropdown.Item>
+                      <Dropdown.Item as={Link} to="/login/provider">Job Provider</Dropdown.Item>
+                      <Dropdown.Item as={Link} to="/login/worker">Worker</Dropdown.Item>
                     </Dropdown.Menu>
                   </Dropdown>
 
                   <Dropdown>
                     <Dropdown.Toggle variant="light">Signup</Dropdown.Toggle>
                     <Dropdown.Menu>
-                      <Dropdown.Item as={Link} to="/signup/ngo">As NGO</Dropdown.Item>
-                      <Dropdown.Item as={Link} to="/signup/provider">As Job Provider</Dropdown.Item>
-                      <Dropdown.Item as={Link} to="/signup/worker">As Worker</Dropdown.Item>
+                      <Dropdown.Item as={Link} to="/signup/ngo">NGO</Dropdown.Item>
+                      <Dropdown.Item as={Link} to="/signup/provider">JobProvider</Dropdown.Item>
+                   
                     </Dropdown.Menu>
                   </Dropdown>
                 </div>
@@ -140,12 +140,14 @@ const CustomNavbar = ({ isAuthenticated, user, homeRoute, profileSliderOpen, set
                   <Link to="/job-request" className="btn btn-outline-primary w-100">Job Requests</Link>
                 </>
               )}
-              {user?.type === "provider" && (
-                <>
-                  <Link to="/jobproviderhome" className="btn btn-outline-primary w-100">Dashboard</Link>
-                  <Link to="/jobproviderform" className="btn btn-outline-primary w-100">Post Job</Link>
-                </>
-              )}
+             {user?.type === "provider" && (
+  <>
+    <Link to="/jobproviderhome" className="btn btn-outline-primary w-100">Dashboard</Link>
+    <Link to="/jobproviderform" className="btn btn-outline-primary w-100">Post Job</Link>
+    <Link to="/delete-jobs" className="btn btn-outline-danger w-100">Delete Job Posts</Link>
+  </>
+)}
+
               <button className="btn btn-danger w-100 mt-3" onClick={handleLogout}>Logout</button>
             </div>
           </div>

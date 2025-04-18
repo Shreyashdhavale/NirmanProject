@@ -28,6 +28,11 @@
     margin-top: 10px;
     padding: 12px;
   }
+  /* Add this to your NGOHome.css file */
+.toast .toast-header {
+  background-color: #3a86ff !important;
+  color: rgb(255, 255, 255) !important; /* For better contrast with the blue background */
+}
   
   @media (max-width: 768px) {
     .dashboard-card {

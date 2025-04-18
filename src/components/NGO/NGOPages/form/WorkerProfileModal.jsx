@@ -335,10 +335,37 @@ const WorkerProfileModal = ({ show, handleClose, workerId, onUpdateSuccess }) =>
               disabled={!editMode}
             >
               <option value="">Select Skill</option>
-              <option value="Plumbing">Plumbing</option>
-              <option value="Carpentry">Carpentry</option>
-              <option value="Electrician">Electrician</option>
-              <option value="Mason">Mason</option>
+                        <option value="Construction Work (Nirmaan Kaam)">Construction Work (Nirmaan Kaam)</option>
+                        <option value="Brick Work (Eet Uthana aur Lagana)">Brick Work (Eet Uthana aur Lagana)</option>
+                        <option value="Cement Mixing (Cement Milana)">Cement Mixing (Cement Milana)</option>
+                        <option value="Digging Work (Gadda Khodna)">Digging Work (Gadda Khodna)</option>
+                        <option value="Painting Work (Rangai Putai)">Painting Work (Rangai Putai)</option>
+                        <option value="Plumbing Work (Pani Kaam)">Plumbing Work (Pani Kaam)</option>
+                        <option value="Electrical Work (Bijli Kaam)">Electrical Work (Bijli Kaam)</option>
+                        <option value="Carpentry Work (Khatiya Kaam)">Carpentry Work (Khatiya Kaam)</option>
+                        <option value="Loading and Unloading (Bojh Uthana aur Utarna)">Loading and Unloading (Bojh Uthana aur Utarna)</option>
+                        <option value="Road Cleaning (Sadak Safai)">Road Cleaning (Sadak Safai)</option>
+                        <option value="Building Cleaning (Imarat Safai)">Building Cleaning (Imarat Safai)</option>
+                        <option value="Toilet Cleaning (Sauchalaya Safai)">Toilet Cleaning (Sauchalaya Safai)</option>
+                        <option value="Farming Work (Kheti Ka Kaam)">Farming Work (Kheti Ka Kaam)</option>
+                        <option value="Cutting Crops (Fasal Kaatna)">Cutting Crops (Fasal Kaatna)</option>
+                        <option value="Planting Seeds (Beej Bona)">Planting Seeds (Beej Bona)</option>
+                        <option value="Watering Fields (Paani Dena)">Watering Fields (Paani Dena)</option>
+                        <option value="Removing Weeds (Ghas Phus Hatana)">Removing Weeds (Ghas Phus Hatana)</option>
+                        <option value="Road Making (Sadak Banana)">Road Making (Sadak Banana)</option>
+                        <option value="Tar and Concrete Work (Tar aur Cement Ka Kaam)">Tar and Concrete Work (Tar aur Cement Ka Kaam)</option>
+                        <option value="Helper Work (Madadgaar Kaam)">Helper Work (Madadgaar Kaam)</option>
+                        <option value="Shop Helper (Dukaan Mein Madad Karna)">Shop Helper (Dukaan Mein Madad Karna)</option>
+                        <option value="Loading Goods in Market (Bazaar Mein Saman Ladna)">Loading Goods in Market (Bazaar Mein Saman Ladna)</option>
+                        <option value="Transport Work (Parivahan Ka Kaam)">Transport Work (Parivahan Ka Kaam)</option>
+                        <option value="Rickshaw or Cart Pulling (Thela Chalana)">Rickshaw or Cart Pulling (Thela Chalana)</option>
+                        <option value="Factory Work (Factory Mein Kaam)">Factory Work (Factory Mein Kaam)</option>
+                        <option value="Packing Work (Saman Pack Karna)">Packing Work (Saman Pack Karna)</option>
+                        <option value="Machine Cleaning (Machine Saaf Karna)">Machine Cleaning (Machine Saaf Karna)</option>
+                        <option value="House Cleaning (Ghar Ki Safai)">House Cleaning (Ghar Ki Safai)</option>
+                        <option value="Washing Utensils (Bartan Dhona)">Washing Utensils (Bartan Dhona)</option>
+                        <option value="Washing Clothes (Kapde Dhona)">Washing Clothes (Kapde Dhona)</option>
+                    
             </Form.Select>
           </Form.Group>
           <Form.Group controlId="skillLevel" className="mb-3">

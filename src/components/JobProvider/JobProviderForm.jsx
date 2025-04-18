@@ -163,7 +163,7 @@ const JobProviderForm = ({ user }) => {
         <div className="col-lg-10">
           <div className="card shadow">
             <div className="card-header bg-primary text-white">
-              <h2 className="card-title mb-0 text-center">Employment Posting Form</h2>
+              <h2 className="card-title mb-0 text-center"> Job Posting Form</h2>
             </div>
             
             <div className="card-body">
@@ -343,6 +343,9 @@ const JobProviderForm = ({ user }) => {
                         <option value="Cement Mixing (Cement Milana)">Cement Mixing (Cement Milana)</option>
                         <option value="Digging Work (Gadda Khodna)">Digging Work (Gadda Khodna)</option>
                         <option value="Painting Work (Rangai Putai)">Painting Work (Rangai Putai)</option>
+                        <option value="Plumbing Work (Pani Kaam)">Plumbing Work (Pani Kaam)</option>
+                        <option value="Electrical Work (Bijli Kaam)">Electrical Work (Bijli Kaam)</option>
+                        <option value="Carpentry Work (Khatiya Kaam)">Carpentry Work (Khatiya Kaam)</option>
                         <option value="Loading and Unloading (Bojh Uthana aur Utarna)">Loading and Unloading (Bojh Uthana aur Utarna)</option>
                         <option value="Road Cleaning (Sadak Safai)">Road Cleaning (Sadak Safai)</option>
                         <option value="Building Cleaning (Imarat Safai)">Building Cleaning (Imarat Safai)</option>

@@ -452,6 +452,14 @@ const WorkerRegistrationForm = () => {
             <option value="Painting Work (Rangai Putai)">
               Painting Work (Rangai Putai)
             </option>
+            <option value="Plumbing Work (Pipli Kaam)">
+              Plumbing Work (Pipli Kaam)
+              </option>
+              <option value="Electrical Work (Bijli Kaam)">
+                Electrical Work (Bijli Kaam)
+              </option>
+              <option value="Carpentry Work (Khatiya Kaam)">
+                Carpentry Work (Khatiya Kaam)</option>
             <option value="Loading and Unloading (Bojh Uthana aur Utarna)">
               Loading and Unloading (Bojh Uthana aur Utarna)
             </option>

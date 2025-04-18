@@ -78,9 +78,7 @@ const AboutPage = () => {
         <p className="text-muted mb-4">
           Whether you're looking for work or hiring workers, our platform makes it easy to connect and create opportunities.
         </p>
-        <div className="d-flex justify-content-center gap-3">
-         <Link to="/Myjobposting" className="btn btn-primary">Post Job</Link>
-       </div>
+        
       </div>
     </div>
   );

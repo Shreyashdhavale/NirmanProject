@@ -12,7 +12,7 @@ const WorkerSearch = () => {
   const [selectedWorkerId, setSelectedWorkerId] = useState(null);
   const [filters, setFilters] = useState({
     skill: '',
-    location: ''
+    preferredWorkLocation: ''
   });
 
   useEffect(() => {
@@ -24,7 +24,7 @@ const WorkerSearch = () => {
       const queryParams = new URLSearchParams({
         name: name,
         skill: filterOptions.skill || '',
-        location: filterOptions.location || ''
+        preferredWorkLocation: filterOptions.location || ''
       });
 
       const response = await axios.get(`http://localhost:8080/api/workers/search?${queryParams}`);
@@ -66,30 +66,7 @@ const WorkerSearch = () => {
                     className="search-input"
                   />
                 </InputGroup>
-              </Col>
-              <Col md={3} className="mb-2 mb-md-0">
-                <InputGroup>
-                  <InputGroup.Text><Filter size={20} /></InputGroup.Text>
-                  <Form.Control
-                    type="text"
-                    placeholder="Skill"
-                    value={filters.skill}
-                    onChange={(e) => setFilters(prev => ({...prev, skill: e.target.value}))}
-                    className="search-input"
-                  />
-                </InputGroup>
-              </Col>
-              <Col md={3} className="mb-2 mb-md-0">
-                <InputGroup>
-                  <InputGroup.Text><MapPin size={20} /></InputGroup.Text>
-                  <Form.Control
-                    type="text"
-                    placeholder="Location"
-                    value={filters.location}
-                    onChange={(e) => setFilters(prev => ({...prev, location: e.target.value}))}
-                    className="search-input"
-                  />
-                </InputGroup>
+            
               </Col>
               <Col md={2} className="mb-2 mb-md-0">
                 <Button 
@@ -139,7 +116,7 @@ const WorkerSearch = () => {
                           </div>
                           <div className="detail-item">
                             <MapPin size={16} />
-                            <span>{worker.location || 'Not specified'}</span>
+                            <span>{worker.preferredWorkLocation || 'Not specified'}</span>
                           </div>
                         </div>
                         <Button 
